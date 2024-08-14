@@ -18,9 +18,7 @@ class UserService {
   }
 
   userExists(recipient) {
-    console.log(recipient);
-    const user = recipient.split('@')[0];
-    const mailboxPath = `/var/mail/vhosts/example.com/${user}/Maildir`;
+    const mailboxPath = `${process.env.MAILBOX_PATH}/${recipient}/Maildir`;
 
     // Check if a real mailbox exists
     if (fs.existsSync(mailboxPath)) return true;
