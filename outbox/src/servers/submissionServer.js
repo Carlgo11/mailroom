@@ -21,7 +21,6 @@ function startServer() {
     console.log("Error %s", err.message);
   });
 
-
   server.listen(process.env.SUBMISSION_PORT, () => {
     console.log(`Submission Server is running on port ${process.env.SUBMISSION_PORT}`);
   });

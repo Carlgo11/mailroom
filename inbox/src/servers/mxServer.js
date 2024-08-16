@@ -8,7 +8,7 @@ function startMXServer() {
     onRcptTo: smtpRouter.handleRcptTo,
     onData: smtpRouter.handleData,
     onMailFrom: smtpRouter.handleMailFrom,
-    disabledCommands: ['AUTH'],
+    disabledCommands: ['AUTH', 'RSET', 'HELP', 'VRFY', 'NOOP'],
     onConnect(session, callback) {
       console.log(`Client connected: ${session.remoteAddress}`);
       return callback();
@@ -16,6 +16,10 @@ function startMXServer() {
     onClose(session) {
       console.log(`Client disconnected: ${session.remoteAddress}`);
     },
+  });
+
+  server.on('error', (err) => {
+    console.log('Error %s', err.message);
   });
 
   server.listen(process.env.MX_PORT, () => {
