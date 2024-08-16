@@ -1,0 +1,19 @@
+{
+  "name": "smtp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "node src/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "mailauth": "^4.6.8",
+    "nodemailer": "^6.9.14",
+    "smtp-connection": "^4.0.2",
+    "smtp-server": "^3.13.4"
+  }
+}
