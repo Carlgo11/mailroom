@@ -1,0 +1,56 @@
+services:
+  inbox:
+    container_name: inbox
+    build: inbox
+    ports:
+      - "25:25"
+    env_file: ".env"
+    volumes:
+      - ./certs:/certs
+      - vhosts:/var/mail/vhosts/
+
+  outbox:
+    container_name: outbox
+    build: outbox
+    ports:
+      - "465:465"
+    env_file: ".env"
+    volumes:
+      - ./certs:/certs
+      - vhosts:/var/mail/vhosts/
+    networks:
+      - mailnet
+
+  redis:
+    image: redis:latest
+    container_name: redis_mail
+    volumes:
+      - redis_data:/data
+    networks:
+      - mailnet
+
+  dovecot:
+    image: dovecot/dovecot:latest
+    container_name: dovecot
+    volumes:
+      - ./conf/dovecot:/etc/dovecot/conf.d
+      - vhosts:/var/mail/vhosts/
+      - ./certs:/certs
+    environment:
+      - DOVECOT_USERDB_ARGS=driver=redis
+      - DOVECOT_PASSWORDDB_ARGS=driver=redis
+      - DOVECOT_REDIS_CONF=/etc/dovecot/dovecot-redis.conf.ext
+    depends_on:
+      - redis
+    networks:
+      - mailnet
+    ports:
+      - "993:993"
+
+volumes:
+  redis_data:
+  vhosts:
+
+networks:
+  mailnet:
+    driver: bridge
