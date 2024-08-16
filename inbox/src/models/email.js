@@ -7,10 +7,10 @@ class Email {
                 to = [],
                 data = '',
               } = {}) {
-    this.id = id; // Unique identifier for the email
-    this.from = from;            // Sender's address
-    this.to = to;                // Array of recipient addresses
-    this.data = data;      // Content/body of the email
+    this.id = id;
+    this.from = from;
+    this.to = to;
+    this.data = data;
   }
 
   parseStream(stream) {
