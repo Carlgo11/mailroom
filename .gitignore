@@ -1,5 +1,6 @@
-certs/
+*.pem
 node_modules
 package-lock.json
 aliases.json
 .env
+.idea

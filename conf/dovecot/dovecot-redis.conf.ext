@@ -1,9 +1,0 @@
-# Dovecot Redis authentication config
-driver = redis
-connect = host=redis
-
-# Password lookup query
-password_query = get user:%u:password
-
-# User lookup query (e.g., home directory, mail location)
-user_query = hmget user:%u home maildir

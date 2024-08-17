@@ -1,0 +1,24 @@
+# /etc/dovecot/dovecot-dict-auth.conf
+
+uri = redis:host=172.18.0.3:port=6379
+
+# Default password scheme to use (bcrypt in this case)
+default_pass_scheme = BLF-CRYPT
+
+# Passdb configuration
+key passdb {
+  key = passdb/%u
+  format = json
+}
+
+# Userdb configuration
+key userdb {
+  key = userdb/%u
+  format = json
+}
+
+# Disable iteration if not needed
+iterate_disable = yes
+
+passdb_objects = passdb
+userdb_objects = userdb

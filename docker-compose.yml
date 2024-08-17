@@ -39,7 +39,6 @@ services:
     environment:
       - DOVECOT_USERDB_ARGS=driver=redis
       - DOVECOT_PASSWORDDB_ARGS=driver=redis
-      - DOVECOT_REDIS_CONF=/etc/dovecot/dovecot-redis.conf.ext
     depends_on:
       - redis
     networks:
