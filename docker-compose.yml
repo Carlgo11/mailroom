@@ -6,7 +6,7 @@ services:
       - "25:25"
     env_file: ".env"
     volumes:
-      - ./certs:/certs
+      - ./certs/inbox:/certs/inbox:ro
       - vhosts:/var/mail/vhosts/
 
   outbox:
@@ -16,7 +16,7 @@ services:
       - "465:465"
     env_file: ".env"
     volumes:
-      - ./certs:/certs
+      - ./certs/outbox:/certs/outbox:ro
       - vhosts:/var/mail/vhosts/
     networks:
       - mailnet
@@ -27,7 +27,8 @@ services:
     volumes:
       - redis_data:/data
     networks:
-      - mailnet
+      mailnet:
+        ipv4_address: 172.18.0.3
 
   dovecot:
     image: dovecot/dovecot:latest
@@ -35,7 +36,7 @@ services:
     volumes:
       - ./conf/dovecot:/etc/dovecot/conf.d
       - vhosts:/var/mail/vhosts/
-      - ./certs:/certs
+      - ./certs/dovecot:/certs/dovecot:ro
     environment:
       - DOVECOT_USERDB_ARGS=driver=redis
       - DOVECOT_PASSWORDDB_ARGS=driver=redis
@@ -53,3 +54,7 @@ volumes:
 networks:
   mailnet:
     driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.0.0/24

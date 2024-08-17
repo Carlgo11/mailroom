@@ -2,7 +2,6 @@
 
 uri = redis:host=172.18.0.3:port=6379
 
-# Default password scheme to use (bcrypt in this case)
 default_pass_scheme = BLF-CRYPT
 
 # Passdb configuration
