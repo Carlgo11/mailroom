@@ -47,12 +47,11 @@ services:
       - "993:993"
 
   rspamd:
-    image: rspamd/rspamd
+    build: rspamd
     container_name: rspamd
     volumes:
       - rspamd_confdir:/etc/rspamd
       - rspamd_dbdir:/var/lib/rspamd
-      - ./conf/rspamd/worker-controller.inc:/etc/rspamd/local.d/worker-controller.inc
     ports:
       - 11332:11332
       - 11333:11333
@@ -61,6 +60,7 @@ services:
       - mailnet
     environment:
       - RSPAMD_REDIS_SERVERS=rspamd-compose-redis
+    env_file: ".env"
 
 volumes:
   redis_data:
