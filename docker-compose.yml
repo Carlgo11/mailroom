@@ -8,6 +8,8 @@ services:
     volumes:
       - ./certs/inbox:/certs/inbox:ro
       - vhosts:/var/mail/vhosts/
+    networks:
+      - mailnet
 
   outbox:
     container_name: outbox
@@ -37,9 +39,6 @@ services:
       - ./conf/dovecot:/etc/dovecot/conf.d
       - vhosts:/var/mail/vhosts/
       - ./certs/dovecot:/certs/dovecot:ro
-    environment:
-      - DOVECOT_USERDB_ARGS=driver=redis
-      - DOVECOT_PASSWORDDB_ARGS=driver=redis
     depends_on:
       - redis
     networks:
@@ -47,9 +46,27 @@ services:
     ports:
       - "993:993"
 
+  rspamd:
+    image: rspamd/rspamd
+    container_name: rspamd
+    volumes:
+      - rspamd_confdir:/etc/rspamd
+      - rspamd_dbdir:/var/lib/rspamd
+      - ./conf/rspamd/worker-controller.inc:/etc/rspamd/local.d/worker-controller.inc
+    ports:
+      - 11332:11332
+      - 11333:11333
+      - 11334:11334
+    networks:
+      - mailnet
+    environment:
+      - RSPAMD_REDIS_SERVERS=rspamd-compose-redis
+
 volumes:
   redis_data:
   vhosts:
+  rspamd_dbdir:
+  rspamd_confdir:
 
 networks:
   mailnet:

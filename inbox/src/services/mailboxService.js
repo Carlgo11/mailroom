@@ -1,3 +1,4 @@
+
 const fs = require('fs');
 const path = require('path');
 
@@ -13,7 +14,7 @@ class mailboxService {
     });
   }
 
-  async saveEmailToInbox(mailbox, email) {
+  async saveEmail(mailbox, email) {
     try {
       const maildirPath = `${process.env.MAILBOX_PATH}/${mailbox}/Maildir`;
       this.createMaildirIfNotExists(maildirPath);
@@ -22,10 +23,11 @@ class mailboxService {
       const emailPath = path.join(maildirPath, 'new', uniqueFilename);
 
       await fs.promises.writeFile(emailPath, email.data);
+      return true
     } catch (err) {
       throw new Error(`Failed to save email to inbox: ${err.message}`);
     }
   }
 }
 
-module.exports = {mailboxService};
+module.exports = new mailboxService;

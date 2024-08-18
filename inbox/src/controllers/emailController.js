@@ -1,6 +1,7 @@
-const {saveEmailToInbox} = require('../services/mailboxService');
+const {saveEmail} = require('../services/mailboxService');
 const Email = require('../models/email');
 const mailAuth = require('../validators/mailAuth');
+const RspamdService = require('../validators/rspamd');
 
 class EmailController {
   async handleIncomingEmail(stream, session) {
@@ -8,11 +9,8 @@ class EmailController {
       try {
         const email = new Email({from: session.envelope.from});
         await email.parseStream(stream);
-
-        session.envelope.rcptTo.map(recipient => {
-          return email.addRecipient(recipient);
-        });
-
+        await email.parseSession(session);
+        /*
         // Validate email
         const {dkim, spf, arc} = await mailAuth.Validate(stream, session);
 
@@ -23,10 +21,30 @@ class EmailController {
         for (const result of dkim.results) {
           if (result.status.result !== 'pass') reject('DKIM invalid.');
         }
-
-        saveEmailToInbox();
+*/
+        const rspamdService = new RspamdService();
+        const rspamd = await rspamdService.checkForSpam(email);
+        switch (rspamd.action) {
+          case 'reject':
+            reject('Spam detected');
+            break;
+          case 'greylist':
+            reject('Try again later');
+            break;
+          case 'soft reject':
+            reject('Try again later');
+            break;
+          case 'add header':
+            // TODO: Add support
+            break;
+          case 'rewrite subject':
+            // TODO: Add support
+            break;
+        }
+        for (const rcpt of email.to) {
+          await saveEmail(rcpt, email);
+        }
         resolve();
-
       } catch (e) {
         reject(e);
       }
