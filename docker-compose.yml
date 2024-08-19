@@ -8,6 +8,9 @@ services:
     volumes:
       - ./certs/inbox:/certs/inbox:ro
       - vhosts:/var/mail/vhosts/
+    depends_on:
+      - redis
+      - rspamd
     networks:
       - mailnet
 
@@ -20,6 +23,8 @@ services:
     volumes:
       - ./certs/outbox:/certs/outbox:ro
       - vhosts:/var/mail/vhosts/
+    depends_on:
+      - redis
     networks:
       - mailnet
 
@@ -57,6 +62,8 @@ services:
       - "11334:11334"
     networks:
       - mailnet
+    depends_on:
+      - redis
     environment:
       - RSPAMD_REDIS_SERVERS=rspamd-compose-redis
     env_file: ".env"
