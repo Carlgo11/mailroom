@@ -67,6 +67,7 @@ class Email {
     this.from = session.envelope.mailFrom.address;
     this.to = session.envelope.rcptTo.map(r => r.address);
     this.hostname = session.clientHostname;
+    return true;
   }
 
   addHeader(name, value){

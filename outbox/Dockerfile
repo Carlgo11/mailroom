@@ -7,4 +7,6 @@ RUN npm install --production
 
 COPY . .
 
+STOPSIGNAL SIGTERM
+
 CMD ["node", "src/index.js"]

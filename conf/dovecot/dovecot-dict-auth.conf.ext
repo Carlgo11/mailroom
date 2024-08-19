@@ -6,13 +6,13 @@ default_pass_scheme = BLF-CRYPT
 
 # Passdb configuration
 key passdb {
-  key = passdb/%u
+  key = user:%u
   format = json
 }
 
 # Userdb configuration
 key userdb {
-  key = userdb/%u
+  key = user:%u
   format = json
 }
 

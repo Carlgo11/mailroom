@@ -23,8 +23,9 @@ class SMTPRouter {
 
   async handleData(stream, session, callback) {
     try {
+      console.log(`${session.remoteAddress} created ${session.id}`);
       await emailController.handleIncomingEmail(stream, session);
-      console.log(sessoin.id, 'Message accepted');
+      console.log(session.id, 'Message accepted');
       callback(null, '2.0.0 OK: Message accepted for delivery');
     } catch (e) {
       if (Object.keys(e).includes('responseCode'))
