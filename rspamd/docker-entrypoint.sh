@@ -11,4 +11,6 @@ EOF
 
 echo 'severs = "172.18.0.3";' > /etc/rspamd/local.d/dmarc.conf
 
+echo 'extended_spam_headers = true;' > /etc/rspamd/local.d/milter_headers.conf
+
 exec "$@"

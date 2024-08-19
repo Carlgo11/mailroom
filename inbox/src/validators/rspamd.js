@@ -1,4 +1,3 @@
-const axios = require('axios');
 
 class RspamdService {
   constructor(rspamdUrl = process.env.RSPAMD_URL || 'http://rspamd:11334') {
@@ -7,19 +6,22 @@ class RspamdService {
   }
 
   async checkForSpam(email) {
-    console.log(email)
     try {
-      const buffer = Buffer.from(email.data, 'utf8');
-      const response = await axios.post(`${this.rspamdUrl}/checkv2`, buffer,
-          {
-            headers: {
-              ...email.serialize(),
-              'Content-Type': 'application/octet-stream',
-              'Password': this.password,
-            },
-          });
+      const headers = email.serialize();
+      const headerString = Object.entries(headers).map(([key, value]) => `${key}: ${value}`).join('\r\n');
+      const emailContent = `${headerString}\r\n\r\n${email.raw}`;
 
-      return response.data;
+      const buffer = Buffer.from(emailContent, 'utf8');
+      const response = await fetch(`${this.rspamdUrl}/checkv2`, {
+        method: 'POST',
+        headers: {
+          'Pass': 'all',
+          'Content-Type': 'application/octet-stream',
+          'Password': this.password,
+        },
+        body: buffer
+      })
+      return await response.json();
     } catch (error) {
       console.error('Error checking email for spam:', error);
       throw new Error('Spam check failed');

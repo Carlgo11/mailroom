@@ -24,26 +24,47 @@ class EmailController {
 */
         const rspamdService = new RspamdService();
         const rspamd = await rspamdService.checkForSpam(email);
+        const error = new Error();
+        console.debug(JSON.stringify(rspamd));
+
+        email.addHeader('X-Spam-Score', rspamd['score']);
+
         switch (rspamd.action) {
           case 'reject':
-            reject('Spam detected');
+            error.responseCode = 550;
+            error.message = '5.7.1 Message rejected as spam'
+            reject(error);
             break;
           case 'greylist':
-            reject('Try again later');
+            error.responseCode = 451;
+            error.message = '4.7.1 Greylisting in effect, please try again later';
+            reject(error);
             break;
           case 'soft reject':
-            reject('Try again later');
+            error.responseCode = 450;
+            error.message = '4.7.1 Soft reject, please try again later'
+            reject(error);
             break;
           case 'add header':
-            // TODO: Add support
+            email.addHeader('X-Spam-Status', 'Yes');
+            email.addHeader('X-Spam-Flag', 'YES');
             break;
           case 'rewrite subject':
-            // TODO: Add support
+            email.subject = `[SPAM] ${email.subject}`;
             break;
         }
+
+        if (rspamd.milter?.add_headers) {
+          Object.entries(rspamd.milter.add_headers).
+              forEach(([name, {value}]) => {
+                email.addHeader(name, value);
+              });
+        }
+
         for (const rcpt of email.to) {
           await saveEmail(rcpt, email);
         }
+
         resolve();
       } catch (e) {
         reject(e);

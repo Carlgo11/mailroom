@@ -24,10 +24,14 @@ class SMTPRouter {
   async handleData(stream, session, callback) {
     try {
       await emailController.handleIncomingEmail(stream, session);
-      callback(null, 'Message accepted');
+      console.log(sessoin.id, 'Message accepted');
+      callback(null, '2.0.0 OK: Message accepted for delivery');
     } catch (e) {
-      console.error(e);
-      callback(new Error(`Message rejected. ${e}`));
+      if (Object.keys(e).includes('responseCode'))
+        console.error(session.id, e.responseCode, e.message);
+      else
+        console.error(session.id, e);
+      callback(e);
     }
   }
 }
