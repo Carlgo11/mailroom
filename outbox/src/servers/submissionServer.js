@@ -10,7 +10,12 @@ function startServer() {
     onAuth: smtpRouter.handleAuth,
     onConnect(session, callback) {
       console.log(`Client connected: ${session.remoteAddress}`);
-      callback();
+
+      // Verify connection is for expected hostname
+      if(session.servername !== process.env.OUTBOX_HOST)
+        return callback(new Error('Unknown hostname'))
+
+      return callback();
     },
     onClose(session) {
       console.log(`Client disconnected: ${session.remoteAddress}`);
@@ -21,8 +26,8 @@ function startServer() {
     console.log("Error %s", err.message);
   });
 
-  server.listen(process.env.SUBMISSION_PORT, () => {
-    console.log(`Submission Server is running on port ${process.env.SUBMISSION_PORT}`);
+  server.listen(process.env.OUTBOX_PORT, () => {
+    console.log(`Submission Server is running on port ${process.env.OUTBOX_PORT}`);
   });
 }
 

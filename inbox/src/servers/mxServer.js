@@ -11,6 +11,11 @@ function startMXServer() {
     disabledCommands: ['AUTH', 'RSET', 'HELP', 'VRFY', 'NOOP'],
     onConnect(session, callback) {
       console.log(`Client connected: ${session.remoteAddress}`);
+
+      // Verify connection is for expected hostname
+      if(session.servername !== process.env.INBOX_HOST)
+        return callback(new Error('Unknown hostname'));
+
       return callback();
     },
     onClose(session) {
@@ -22,8 +27,8 @@ function startMXServer() {
     console.log('Error %s', err.message);
   });
 
-  server.listen(process.env.MX_PORT, () => {
-    console.log(`MX Server is running on port ${process.env.MX_PORT}`);
+  server.listen(process.env.INBOX_PORT, () => {
+    console.log(`MX Server is running on port ${process.env.INBOX_PORT}`);
   });
 }
 
