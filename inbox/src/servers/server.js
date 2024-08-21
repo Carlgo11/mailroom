@@ -1,9 +1,10 @@
 const SMTPServer = require('smtp-server').SMTPServer;
 const smtpRouter = require('../routes/smtpRouter');
 const {tlsConfig} = require('../config/mxTLS');
+let server;
 
-function startMXServer() {
-  const server = new SMTPServer({
+function startServer() {
+  server = new SMTPServer({
     ...tlsConfig,
     onRcptTo: smtpRouter.handleRcptTo,
     onData: smtpRouter.handleData,
@@ -13,10 +14,10 @@ function startMXServer() {
       console.log(`Client connected: ${session.remoteAddress}`);
 
       // Verify connection is for expected hostname
-      if(session.servername !== process.env.INBOX_HOST)
+      if (session.servername !== process.env.INBOX_HOST)
         return callback(new Error('Unknown hostname'));
 
-      return callback();
+      callback();
     },
     onClose(session) {
       console.log(`Client disconnected: ${session.remoteAddress}`);
@@ -24,12 +25,22 @@ function startMXServer() {
   });
 
   server.on('error', (err) => {
-    console.log('Error %s', err.message);
+    console.error('Error %s', err.message);
   });
 
   server.listen(process.env.INBOX_PORT, () => {
-    console.log(`MX Server is running on port ${process.env.INBOX_PORT}`);
+    console.log(`Inbox server is running on port ${process.env.INBOX_PORT}`);
   });
 }
 
-module.exports = {startMXServer};
+function stopServer() {
+  server.close(() => {
+    console.log('Inbox server stopped');
+    process.exit(0);
+  });
+}
+
+process.on('SIGTERM', () => stopServer());
+process.on('SIGINT', () => stopServer());
+
+module.exports = {startServer};
