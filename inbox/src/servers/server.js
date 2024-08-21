@@ -1,6 +1,6 @@
 const SMTPServer = require('smtp-server').SMTPServer;
 const smtpRouter = require('../routes/smtpRouter');
-const {tlsConfig} = require('../config/mxTLS');
+const {tlsConfig} = require('../config/tls');
 let server;
 
 function startServer() {

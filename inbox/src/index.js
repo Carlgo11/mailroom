@@ -1,3 +1,3 @@
-const {startMXServer} = require('./servers/mxServer');
+const {startServer} = require('./servers/server');
 
-startMXServer();
+startServer();

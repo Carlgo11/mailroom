@@ -1,9 +1,10 @@
 const SMTPServer = require('smtp-server').SMTPServer;
 const smtpRouter = require('../routes/smtpRouter');
 const {tlsConfig} = require('../config/tls');
+let server;
 
 function startServer() {
-  const server = new SMTPServer({
+  server = new SMTPServer({
     ...tlsConfig,
     onData: smtpRouter.handleData,
     onMailFrom: smtpRouter.handleMailFrom,
@@ -30,5 +31,15 @@ function startServer() {
     console.log(`Submission Server is running on port ${process.env.OUTBOX_PORT}`);
   });
 }
+
+function stopServer(){
+  server.close(() => {
+    console.log('MX Server stopped');
+    process.exit(0);
+  });
+}
+
+process.on('SIGTERM', () => stopServer());
+process.on('SIGINT', () => stopServer());
 
 module.exports = {startServer: startServer};

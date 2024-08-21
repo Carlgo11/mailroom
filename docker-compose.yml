@@ -8,11 +8,14 @@ services:
     volumes:
       - ./certs/inbox:/certs/inbox:ro
       - vhosts:/var/mail/vhosts/
+    read_only: true
+    tmpfs:
+      - /tmp
     depends_on:
       - redis
       - rspamd
     networks:
-      - mailnet
+      - postnet
 
   outbox:
     container_name: outbox
@@ -23,10 +26,13 @@ services:
     volumes:
       - ./certs/outbox:/certs/outbox:ro
       - vhosts:/var/mail/vhosts/
+    read_only: true
+    tmpfs:
+      - /tmp
     depends_on:
       - redis
     networks:
-      - mailnet
+      - postnet
 
   redis:
     image: redis:latest
@@ -34,12 +40,17 @@ services:
     volumes:
       - redis_data:/data
     networks:
-      mailnet:
+      postnet:
         ipv4_address: 172.18.0.3
 
   dovecot:
     image: dovecot/dovecot:latest
     container_name: dovecot
+    read_only: true
+    tmpfs:
+      - /run/dovecot
+      - /var/lib/dovecot
+      - /tmp
     volumes:
       - ./conf/dovecot:/etc/dovecot/conf.d
       - vhosts:/var/mail/vhosts/
@@ -47,7 +58,7 @@ services:
     depends_on:
       - redis
     networks:
-      - mailnet
+      - postnet
     ports:
       - "993:993"
 
@@ -61,7 +72,7 @@ services:
       - "11333:11333"
       - "11334:11334"
     networks:
-      - mailnet
+      - postnet
     depends_on:
       - redis
     environment:
@@ -75,7 +86,7 @@ volumes:
   rspamd_confdir:
 
 networks:
-  mailnet:
+  postnet:
     driver: bridge
     ipam:
       driver: default
