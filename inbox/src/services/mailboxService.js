@@ -1,10 +1,11 @@
-
 const fs = require('fs');
 const path = require('path');
+const userService = require('./userService');
 
 class mailboxService {
 
-  async saveEmail(mailbox, email) {
+  async saveEmail(adress, email) {
+    const mailbox = await userService.userExists(adress)
     try {
       const maildirPath = `${process.env.MAILBOX_PATH}/${mailbox}/Maildir`;
       const directories = ['cur', 'new', 'tmp'];
