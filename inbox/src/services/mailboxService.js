@@ -2,37 +2,57 @@ const fs = require('fs');
 const path = require('path');
 const userService = require('./userService');
 
-class mailboxService {
+class MailboxService {
 
-  async saveEmail(adress, email) {
-    const mailbox = await userService.userExists(adress)
+  constructor() {
+    this.saveEmail = this.saveEmail.bind(this);
+    this.serializeHeaders = this.serializeHeaders.bind(this);
+  }
+
+  async saveEmail(address, email) {
+    const mailbox = await userService.userExists(address);
     try {
       const maildirPath = `${process.env.MAILBOX_PATH}/${mailbox}/Maildir`;
       const directories = ['cur', 'new', 'tmp'];
       directories.forEach(dir => {
         const dirPath = path.join(maildirPath, dir);
-        if (!fs.existsSync(dirPath)) {
+        if (!fs.existsSync(dirPath))
           fs.mkdirSync(dirPath, {recursive: true});
-        }
       });
 
-      const uniqueFilename = email.id;
-      const emailPath = path.join(maildirPath, 'new', uniqueFilename);
+      const emailPath = path.join(maildirPath, 'new', email.id);
 
-      // Convert headers back into a string format
-      const headersString = Object.entries(email.headers)
-      .map(([key, value]) => `${key}: ${value}`)
-      .join('\r\n');
+      // Serialize headers
+      const headersString = this.serializeHeaders(email.headers);
 
       // Combine headers and body
       const fullEmail = `${headersString}\r\n\r\n${email.body}`;
 
       await fs.promises.writeFile(emailPath, fullEmail);
-      return true
+      return true;
     } catch (err) {
       throw new Error(`Failed to save email to inbox: ${err.message}`);
     }
   }
+
+  // Method to serialize headers
+  serializeHeaders(headers) {
+    return Object.entries(headers).map(([key, value]) => {
+      // Check if value is an object with value and params
+      if (value && typeof value === 'object' && value.value) {
+        let headerValue = value.value;
+        if (value.params) {
+          const paramsString = Object.entries(value.params).
+              map(([paramKey, paramValue]) => `${paramKey}=${paramValue}`).
+              join('; ');
+          headerValue += `; ${paramsString}`;
+        }
+        return `${key}: ${headerValue}`;
+      }
+      // Otherwise, treat it as a simple string
+      return `${key}: ${value}`;
+    }).join('\r\n');
+  }
 }
 
-module.exports = new mailboxService;
+module.exports = new MailboxService();
