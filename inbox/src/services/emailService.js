@@ -14,8 +14,8 @@ class EmailService {
     ]);
 
     await Promise.all([
-      // Validate the email with SPF, DKIM, ARC
-      authService.validateEmail(email, stream, session),
+      // Validate the email with SPF, DKIM, ARC, DMARC
+      authService.validateEmail(email.raw, session),
       // Check for spam using Rspamd
       spamService.processRspamd(email),
     ]);

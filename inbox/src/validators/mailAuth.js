@@ -1,10 +1,11 @@
 const {authenticate} = require('mailauth');
 
-async function Validate(stream, {remoteAddress, hostNameAppearsAs, envelope}) {
-  return authenticate(stream, {
+async function Validate(message, {remoteAddress, hostNameAppearsAs, envelope}) {
+  return authenticate(message, {
     ip: remoteAddress,
     helo: hostNameAppearsAs,
     sender: envelope.mailFrom.address,
+    mta: process.env.INBOX_HOST,
   });
 }
 
