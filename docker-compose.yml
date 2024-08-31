@@ -8,12 +8,13 @@ services:
     volumes:
       - ./certs/inbox:/certs/inbox:ro
       - vhosts:/var/mail/vhosts/
+      - ./certs/clients/users:/certs/clients/users:ro
     read_only: true
     tmpfs:
       - /tmp
     depends_on:
       - redis
-      - rspamd
+#      - rspamd
     networks:
       - postnet
 
@@ -25,6 +26,7 @@ services:
     env_file: ".env"
     volumes:
       - ./certs/outbox:/certs/outbox:ro
+      - ./certs/clients:/certs/clients
       - vhosts:/var/mail/vhosts/
     read_only: true
     tmpfs:
@@ -55,6 +57,7 @@ services:
       - ./conf/dovecot:/etc/dovecot/conf.d
       - vhosts:/var/mail/vhosts/
       - ./certs/dovecot:/certs/dovecot:ro
+      - ./certs/clients:/certs/clients:ro
     depends_on:
       - redis
     networks:

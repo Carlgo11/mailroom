@@ -3,7 +3,7 @@ WORKDIR /usr/src/inbox
 
 COPY package.json ./
 
-RUN npm install --production
+RUN npm install --production; apk add openssl
 
 COPY . .
 
