@@ -1,11 +1,10 @@
-const { exec } = require('child_process');
+const {exec} = require('child_process');
 const fs = require('fs').promises;
 const path = require('path');
 
 class SMIMEService {
   constructor() {
     this.encryptEmail = this.encryptEmail.bind(this);
-    this.constructMimeMessage = this.constructMimeMessage.bind(this);
     this.serializeHeaders = this.serializeHeaders.bind(this);
   }
 
@@ -42,13 +41,21 @@ class SMIMEService {
           }
 
           try {
-            const encryptedEmail = await fs.readFile(mailPath, 'utf8');
+            let encryptedEmail = await fs.readFile(mailPath, 'utf8');
             await fs.unlink(mailPath); // Clean up the temporary output file
             await fs.unlink(tempInputPath); // Clean up the temporary input file
+
+            // Remove the first and last lines (BEGIN and END markers)
+            const lines = encryptedEmail.split('\n');
+            encryptedEmail = lines.slice(1, -2).join('\n');
+            encryptedEmail += '\n';
+
             resolve(encryptedEmail);
           } catch (err) {
-            await fs.unlink(tempInputPath).catch(() => {});
-            await fs.unlink(mailPath).catch(() => {});
+            await fs.unlink(tempInputPath).catch(() => {
+            });
+            await fs.unlink(mailPath).catch(() => {
+            });
             reject(err);
           }
         });
@@ -66,15 +73,6 @@ class SMIMEService {
     } catch (err) {
       throw new Error(`Failed to encrypt email: ${err.message}`);
     }
-  }
-
-  // Helper function to construct the full MIME message
-  constructMimeMessage(email) {
-    const headersString = Object.entries(email.headers)
-    .map(([key, value]) => `${key}: ${value}`)
-    .join('\r\n');
-
-    return `${headersString}\r\n\r\n${email.body}`;
   }
 
   // Method to serialize headers
