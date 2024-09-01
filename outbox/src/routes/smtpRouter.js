@@ -1,5 +1,5 @@
-const emailController = require('../controllers/emailController');
 const {authenticate} = require('../services/authService');
+const handleOutgoingEmail = require('../controllers/emailController');
 
 class SMTPRouter {
 
@@ -8,7 +8,12 @@ class SMTPRouter {
   }
 
   async handleData(stream, session, callback) {
-    callback();
+    try {
+      await handleOutgoingEmail(stream, session);
+      callback();
+    }catch(e){
+      callback(e);
+    }
   }
 
   handleAuth(auth, session, callback) {

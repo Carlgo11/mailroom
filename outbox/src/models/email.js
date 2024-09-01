@@ -8,6 +8,7 @@ class Email {
                 to = [],
                 raw = '',
                 pgp = null,
+                domain = '',
               } = {}) {
     this.id = id;
     this.from = from;
@@ -15,6 +16,7 @@ class Email {
     this.headers = {}
     this.raw = raw;
     this.pgp = pgp;
+    this.domain = domain
   }
 
   async parseStream(stream) {
@@ -67,6 +69,7 @@ class Email {
   parseSession(session){
     this.ip = session.remoteAddress;
     this.from = session.envelope.mailFrom.address;
+    this.domain = this.from.split('@')[1];
     this.to = session.envelope.rcptTo.map(r => r.address);
     this.hostname = session.clientHostname;
     return true;
@@ -96,6 +99,22 @@ class Email {
       Hostname: this.hostname,
       Rcpt: this.to,
     };
+  }
+
+  serializeHeaders(headers = this.headers){
+    return Object.entries(headers).map(([key, value]) => {
+        if (value && typeof value === 'object' && value.value) {
+          let headerValue = value.value;
+          if (value.params) {
+            const paramsString = Object.entries(value.params).
+                map(([paramKey, paramValue]) => `${paramKey}=${paramValue}`).
+                join('; ');
+            headerValue += `; ${paramsString}`;
+          }
+          return `${key}: ${headerValue}`;
+        }
+        return `${key}: ${value}`;
+    }).join('\r\n');
   }
 }
 

@@ -1,5 +1,5 @@
 class EmailService {
-  async processIncomingEmail(stream, session) {
+  async processEmail(stream, session) {
 
   }
 }
