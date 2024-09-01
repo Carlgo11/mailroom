@@ -14,12 +14,12 @@ class EmailService {
       email.parseSession(session),
     ]);
 
-    /*await Promise.all([
+    await Promise.all([
       // Validate the email with SPF, DKIM, ARC, DMARC
       authService.validateEmail(email.raw, session),
       // Check for spam using Rspamd
       spamService.processRspamd(email),
-    ]);*/
+    ]);
 
     // Save the email for each recipient
     for (const rcpt of email.to) {

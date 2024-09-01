@@ -14,8 +14,8 @@ function startServer() {
       console.log(`Client connected: ${session.remoteAddress}`);
 
       // Verify connection is for expected hostname
-      // if (session.servername !== process.env.INBOX_HOST)
-      //   return callback(new Error('Unknown hostname'));
+      if (session.servername !== process.env.INBOX_HOST)
+        return callback(new Error('Unknown hostname'));
 
       callback();
     },
