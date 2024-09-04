@@ -22,18 +22,20 @@ class EmailService {
     ]);
 
     // Save the email for each recipient
-    for (const rcpt of email.to) {
-      try {
-        let newEmail = JSON.parse(JSON.stringify(email));
-        newEmail = await encryptEmail(rcpt, newEmail);
-        // Save S/MIME encrypted email
-        await saveEmail(rcpt, newEmail);
-      } catch (e) {
-        console.debug(e);
-        // Save unencrypted email
-        await saveEmail(rcpt, email);
-      }
-    }
+    await Promise.all(
+        email.to.map(async rcpt => {
+          try {
+            let newEmail = JSON.parse(JSON.stringify(email));
+            newEmail = await encryptEmail(rcpt, newEmail);
+            // Save S/MIME encrypted email
+            await saveEmail(rcpt, newEmail);
+          } catch (e) {
+            console.debug(e);
+            // Save unencrypted email
+            await saveEmail(rcpt, email);
+          }
+        }),
+    );
   }
 }
 

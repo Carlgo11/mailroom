@@ -23,8 +23,12 @@ function startServer() {
     },
   });
 
-  server.on("error", (err) => {
-    console.log("Error %s", err.message);
+  server.on('error', (err) => {
+    if(err['library'] === 'SSL routines'){
+      console.error(`TLS Error: ${err.reason} (${err.remote})`)
+    }else {
+      console.error('Error: %s', err.reason);
+    }
   });
 
   server.listen(process.env.OUTBOX_PORT, () => {

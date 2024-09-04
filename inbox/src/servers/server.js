@@ -9,13 +9,14 @@ function startServer() {
     onRcptTo: smtpRouter.handleRcptTo,
     onData: smtpRouter.handleData,
     onMailFrom: smtpRouter.handleMailFrom,
+    logger: false,
     disabledCommands: ['AUTH', 'RSET', 'HELP', 'VRFY', 'NOOP'],
     onConnect(session, callback) {
       console.log(`Client connected: ${session.remoteAddress}`);
 
       // Verify connection is for expected hostname
-      if (session.servername !== process.env.INBOX_HOST)
-        return callback(new Error('Unknown hostname'));
+      // if (session.servername !== process.env.INBOX_HOST)
+      //   return callback(new Error('Unknown hostname'));
 
       callback();
     },
@@ -25,7 +26,11 @@ function startServer() {
   });
 
   server.on('error', (err) => {
-    console.error('Error %s', err.message);
+    if(err['library'] === 'SSL routines'){
+      console.error(`TLS Error: ${err.reason} (${err.remote})`)
+    }else {
+      console.error('Error: %s', err.reason);
+    }
   });
 
   server.listen(process.env.INBOX_PORT, () => {
