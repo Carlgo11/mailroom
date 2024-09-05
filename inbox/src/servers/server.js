@@ -15,8 +15,12 @@ function startServer() {
       console.log(`Client connected: ${session.remoteAddress}`);
 
       // Verify connection is for expected hostname
-      // if (session.servername !== process.env.INBOX_HOST)
-      //   return callback(new Error('Unknown hostname'));
+      if (session.servername !== process.env.INBOX_HOST) {
+        console.log(`Closing connection with ${session.remoteAddress}: Unknown hostname.`);
+        return callback(new Error('Unknown hostname'));
+      }
+
+      smtpRouter.handleConnect(session,callback);
 
       callback();
     },

@@ -35,6 +35,23 @@ class SMTPRouter {
       callback(e);
     }
   }
+
+  async handleConnect(session, callback) {
+    if (process.env.SPAMHAUS_API_KEY) {
+      const res = await fetch(
+          `https://apibl.spamhaus.net/lookup/v1/ZEN/${session.remoteAddress}`, {
+            headers: {
+              'Accept': 'application/json',
+              'Authorization': `Bearer ${process.env.SPAMHAUS_API_KEY}`,
+            },
+          });
+      if (res.status === 200) {
+        console.error(`${session.remoteAddress} blacklisted by Spamhaus.`);
+        return callback(new Error('IP blacklisted by Spamhaus <https://check.spamhaus.org/>'));
+      }
+    }
+    return callback();
+  }
 }
 
 module.exports = new SMTPRouter();
