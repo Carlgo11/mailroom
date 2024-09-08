@@ -1,5 +1,5 @@
 import {Router} from 'express';
-import {login, register} from '../services/userService.js';
+import {getUser, listUsers, register} from '../services/userService.js';
 import {generateCertificate} from '../services/clientCertService.js';
 
 const router = Router();
@@ -17,9 +17,13 @@ router.post('/users/register', async (req, res) => {
 });
 
 router.get('/users/:user/', async (req, res) => {
-  return res.send(await login(req.params['user'], req.query.password));
+  return res.send(await getUser(req.params.user));
 });
 
+router.get('/users/', async (req, res) => {
+  const users = await listUsers();
+  return res.send(JSON.stringify(users));
+})
 router.get('/users/:user/certificate', async (req, res) => {
   try {
     const cert = generateCertificate(req.params['user']);

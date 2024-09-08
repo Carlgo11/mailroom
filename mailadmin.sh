@@ -60,9 +60,8 @@ function get_user() {
         exit 1
     fi
     email="$1"
-
-    echo "Getting details for user: $email"
-    curl -X GET "${BASE_URL}/users/${email}" -H "Content-Type: application/json"
+    echo "${email} details:"
+    curl -s -X GET "${BASE_URL}/users/${email}" -H "Content-Type: application/json" | jq -r 'to_entries[] | "  \(.key): \(.value)"'
 }
 
 # Generate certificate for user
