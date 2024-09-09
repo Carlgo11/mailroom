@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 
 // Create a Redis client
 const client = redis.createClient({
-  // url: `redis://redis_mail:6379`,
+  url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
 });
 
 client.on('error', (e) => console.error('Redis client error:', e));

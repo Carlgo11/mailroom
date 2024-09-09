@@ -19,4 +19,3 @@ STOPSIGNAL SIGTERM
 CMD [ "/usr/bin/rspamd", "-f" ]
 
 EXPOSE 11333 11334
-

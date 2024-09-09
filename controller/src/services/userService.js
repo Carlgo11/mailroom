@@ -4,7 +4,7 @@ import {get} from 'node:http';
 
 // Create a Redis client
 const client = await createClient({
-  url: `redis://redis_mail:6379`,
+  url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
 }).on('error', (e) => console.error('Redis client error:', e)).connect();
 
 export async function register(address, password) {

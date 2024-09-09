@@ -7,6 +7,6 @@ const app = express();
 app.use(express.json({type: '*/*'}));
 app.use(userRoute);
 
-app.listen(process.env.CONTROLLER_PORT || 80, () => {
-  console.log(`Server started on port ${process.env.CONTROLLER_PORT || 80}`);
+app.listen(process.env.CONTROLLER_PORT || 6804, () => {
+  console.log(`Server started on port ${process.env.CONTROLLER_PORT || 6804}`);
 })
