@@ -14,7 +14,7 @@ WORKDIR /usr/src/outbox
 COPY package.json ./
 
 # Install only the production dependencies
-RUN npm install --production; apk add openssl; chmod +x /usr/local/bin/entrypoint.sh
+RUN npm install --production; apk add openssl
 
 # Copy the rest of the application code to the working directory
 COPY . .
