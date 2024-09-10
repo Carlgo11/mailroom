@@ -16,7 +16,7 @@ async function handleOutgoingEmail(stream, session) {
     const dkim = new DKIM({domainName: email.domain, selector: '_dkim'});
     await dkim.signEmail(email);
 
-    await Send.processEmail(email);
+    await Send.processEmail(email, session);
   } catch (e) {
     console.error(e);
     throw e;
