@@ -17,10 +17,11 @@
     "mailauth": "^4.6.8",
     "mailparser": "^3.7.1",
     "mocha": "^10.7.3",
-    "nodemailer": "^6.9.14",
+    "nodemailer": "^6.9.15",
     "openpgp": "^5.11.2",
     "redis": "^4.7.0",
-    "smtp-connection": "^4.0.2",
-    "smtp-server": "^3.13.4"
+    "smtp-server": "^3.13.4",
+    "tangerine": "^1.5.9",
+    "undici": "^6.19.8"
   }
 }
