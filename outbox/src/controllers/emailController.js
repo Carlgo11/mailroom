@@ -13,10 +13,13 @@ async function handleOutgoingEmail(stream, session) {
       email.parseSession(session),
     ]);
 
-    const dkim = new DKIM({domainName: email.domain, selector: '_dkim'});
-    await dkim.signEmail(email);
+    // const dkim = new DKIM({domainName: email.domain, selector: '_dkim'});
+    // await dkim.signEmail(email);
 
-    await Send.processEmail(email, session);
+
+    for(const rcpt of email.to) {
+      await Send.processEmail(email,rcpt);
+    }
   } catch (e) {
     console.error(e);
     throw e;

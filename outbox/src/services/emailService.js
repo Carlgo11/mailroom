@@ -1,49 +1,120 @@
 const SMTPConnection = require('nodemailer/lib/smtp-connection');
-const dns = require('dnsService.mjs');
 const tls = require('tls');
+const net = require('net');
 const types = [undefined, 'sha256', 'sha512'];
 
 class EmailService {
-  async processEmail(email) {
-    const hosts = await dns.fetchMX(email.domain);
-    for (const host of hosts) {
-      const socket = tls.connect(25, host, {servername: host});
 
-      const tlsa = await this.validateCert(socket, host);
-      if (!tlsa) throw new Error('Invalid TLSA');
+  constructor() {
+    this.processEmail = this.processEmail.bind(this);
+    this.validateCert = this.validateCert.bind(this);
+    this.establishConnection = this.establishConnection.bind(this);
+    this.sendMessage = this.sendMessage.bind(this);
+  }
 
-      const con = new SMTPConnection({
-        host: host,
-        port: 25,
-        requireTLS: true,
-        name: process.env.OUTBOX_HOST,
-        socket,
-      });
+  async establishConnection(host, port, clientHost) {
+    return new Promise((resolve, reject) => {
+      const socket = net.connect(port, host);
 
-      const envelope = {
-        from: email.from,
-        to: email.to,
-        use8BitMime: true,
-      };
+      socket.on('data', (data) => {
+        const response = data.toString();
+        console.debug('Server response:', response);
 
-      const message = `${email.serializeHeaders()}\r\n\r\n${email.body}`;
+        if (response.startsWith('250')) {
+          socket.write('STARTTLS\r\n');
+        } else if (response.startsWith('220 Ready to start TLS')) {
+          console.debug('Starting TLS connection');
+          const secureSocket = tls.connect({
+            socket: socket,
+            servername: host,
+            minVersion: process.env.OUTBOX_TLS_MIN_VERSION || process.env.TLS_MIN_VERSION,
+            rejectUnauthorized: false, // Only set to false during testing
+          }, () => {
+            console.debug('TLS connection established');
+            resolve(secureSocket);
+          });
 
-      con.send(envelope, message, (err, info) => {
-        if (!err) {
-          // Log status
-          console.log(info);
-          con.quit();
-          return true;
-        } else {
-          console.error(err.code, err.response, err.responseCode);
-          con.quit();
+          secureSocket.on('error', (err) => {
+            console.error('TLS socket error:', err);
+            reject(err);
+          });
+        } else if (response.startsWith('220')) {
+          socket.write(`EHLO ${clientHost}\r\n`);
         }
       });
-    }
+
+      socket.on('error', (err) => {
+        console.error('Socket error:', err);
+        reject(err);
+      });
+
+      socket.on('timeout', () => {
+        reject(new Error('Connection timeout'));
+      });
+
+      socket.on('end', () => {
+        reject(new Error('Connection closed prematurely'));
+      });
+    });
+  }
+
+  async sendMessage(socket, {envelope, message}) {
+    // Initiate message transfer
+    const con = new SMTPConnection({
+      connection: socket,
+      logger: process.env.NODE_ENV !== 'production',
+      debug: process.env.NODE_ENV !== 'production',
+      transactionLog: process.env.NODE_ENV !== 'production',
+    });
+
+    con.on('error', (e) => {
+      console.error(e);
+      throw e;
+    });
+
+    con.connect(() => {
+      con.send(envelope, message, (err, info) => {
+        if (err) {
+          console.error('Error', err.code, err.response, err.responseCode);
+          con.quit();
+          throw err;
+        } else {
+          con.quit();
+          return info;
+        }
+      });
+    });
+  }
+
+  async processEmail(email,rcpt) {
+    const dns = await import('./dnsService.mjs');
+      const domain = rcpt.split('@')[1];
+      const hosts = await dns.fetchMX(domain);
+
+      // Try each provided MX address
+      for (let host of hosts) {
+
+        // Create STARTTLS session with host
+        const socket = await this.establishConnection(host, 25, 'localhost');
+
+        // Validate TLSA records
+        const tlsa = await this.validateCert(socket, host);
+        if (!tlsa) throw new Error('Invalid TLSA');
+
+        console.debug('Starting message transfer');
+        const result = await this.sendMessage(socket, email.packageEmail())
+
+        // Only send return if server accepted the message.
+        if (result) return result;
+      }
+    // Return false if no hosts are found.
+    return false;
+
   }
 
   async validateCert(socket, hostname) {
     try {
+      const dns = await import('./dnsService.mjs');
       const cert = socket.getPeerCertificate();
       const records = await dns.fetchTLSA(hostname);
       if (!records.length) return true;

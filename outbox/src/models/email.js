@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const { simpleParser } = require('mailparser');
-
+const excludedHeaders = ['user-agent', ]
 class Email {
   constructor({
                 id = this.generateID(),
@@ -44,10 +44,12 @@ class Email {
 
           this.headers = {};
           parsedEmail.headers.forEach((value, key) => {
-            if (typeof value === 'object' && value.text) {
-              this.headers[key] = value.text; // Use the 'text' representation for complex headers
-            } else {
-              this.headers[key] = value; // Directly assign simple headers
+            if(!excludedHeaders.includes(key.toString().toLowerCase())) {
+              if (typeof value === 'object' && value.text) {
+                this.headers[key] = value.text; // Use the 'text' representation for complex headers
+              } else {
+                this.headers[key] = value; // Directly assign simple headers
+              }
             }
           });
 
@@ -85,12 +87,9 @@ class Email {
     return `${timestamp}.${randomPart}.localhost`;
   }
 
-  // Method to add a recipient
-  addRecipient(recipient) {
-    this.to.push(recipient);
-  }
-
-  // Method to serialize the email for storage or transmission
+  /**
+   Method to serialize the email for storage or transmission
+   */
   serialize() {
     return {
       ...this.headers,
@@ -115,6 +114,19 @@ class Email {
         }
         return `${key}: ${value}`;
     }).join('\r\n');
+  }
+
+  packageEmail() {
+    const headers = this.serializeHeaders();
+    const envelope = {
+      to: this.to.join(' '),
+      from: this.from,
+      use8BitMime: true,
+    };
+    return {
+      envelope,
+      message: `${headers}\r\n\r\n${this.body}`
+    };
   }
 }
 

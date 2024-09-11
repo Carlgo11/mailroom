@@ -26,5 +26,3 @@ export async function fetchTLSA(domain) {
     return [];
   }
 }
-
-fetchTLSA(process.argv[2]).then(r => console.log(r));
