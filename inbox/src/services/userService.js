@@ -24,7 +24,7 @@ class UserService {
       if (aliasExists) return await this._get(`alias:${user}`);  // Return the aliased delivery email address
 
       // Neither user nor alias exists
-      return null;
+      return false;
     } catch (error) {
       console.error('Error checking user existence:', error);
       throw error;
