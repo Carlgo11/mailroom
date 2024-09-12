@@ -55,6 +55,7 @@ class Email {
 
           // Optionally extract other properties if needed
           this.subject = parsedEmail.subject || '';
+          this.headers['contend-type'] = this.headers['contend-type'] || 'text/plain';
 
           resolve();
         } catch (err) {

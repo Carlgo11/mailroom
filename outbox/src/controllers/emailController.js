@@ -1,6 +1,5 @@
 const Email = require('../models/email');
 const DKIM = require('../middleware/dkim');
-const Send = require('../services/emailService');
 const pgp = require('../middleware/pgp');
 
 async function handleOutgoingEmail(stream, session) {
@@ -17,8 +16,17 @@ async function handleOutgoingEmail(stream, session) {
     // await dkim.signEmail(email);
 
 
+    const {processEmail} = await import('../services/emailService.mjs');
+
     for(const rcpt of email.to) {
-      await Send.processEmail(email,rcpt);
+      const key = await pgp.find(rcpt.replace(/([<>])/g, ''))
+      if(key){
+        const boundary = email.id.split('.')[1]
+        const body = await pgp.encrypt(email,key);
+        email.body = `--${boundary}\r\nContent-Type: application/pgp-encrypted\r\n\r\nVersion: 1\r\n\r\n--${boundary}\r\nContent-Type: application/octet-stream\r\n\r\n${body}\r\n--${boundary}--`;
+        email.addHeader('content-type',`multipart/encrypted; protocol="application/pgp-encrypted"; boundary="${boundary}"`);
+      }
+      await processEmail(email,rcpt);
     }
   } catch (e) {
     console.error(e);

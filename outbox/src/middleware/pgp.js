@@ -12,31 +12,25 @@ class PGP {
     const stream = res.body;
     let chunks = [];
     for await(const chunk of stream) {
-      chunks.push(Buffer.from(chunk))
+      chunks.push(Buffer.from(chunk));
     }
 
-    const data = Buffer.concat(chunks).toString('utf-8');
-    return openpgp.readKey({armoredKey: data});
+    return Buffer.concat(chunks).toString('utf-8');
   }
 
   async encrypt(email, pubkey) {
+    // Include Content-Type in the encrypted body
+    const ctype = {'Content-Type': email.headers['content-type']};
+
     const [message, pubkeys] = await Promise.all([
-      openpgp.createMessage({text: email.body}),
+      openpgp.createMessage(
+          {text: `${email.serializeHeaders(ctype)}\r\n\r\n${email.body}`}),
       openpgp.readKey({armoredKey: pubkey}),
     ]);
 
     return openpgp.encrypt({
       message,
       encryptionKeys: pubkeys,
-      signingKeys: email.pgp,
-    });
-  }
-
-  async signature(key, passphrase) {
-    return openpgp.decryptKey({
-      privateKey: await openpgp.readPrivateKey({
-        armoredKey: key,
-      }), passphrase,
     });
   }
 }
