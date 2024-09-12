@@ -7,12 +7,14 @@ class Email {
                 from = '',
                 to = [],
                 raw = '',
+                date = new Date().toISOString(),
               } = {}) {
     this.id = id;
     this.from = from;
     this.to = to;
     this.headers = {}
     this.raw = raw;
+    this.date = date;
   }
 
   async parseStream(stream) {
@@ -77,7 +79,7 @@ class Email {
   generateID() {
     const timestamp = Date.now();
     const randomPart = crypto.randomBytes(16).toString('hex');
-    return `${timestamp}.${randomPart}.localhost`;
+    return `${timestamp}.${randomPart}.${process.env.INBOX_HOST}`;
   }
 
   // Method to add a recipient

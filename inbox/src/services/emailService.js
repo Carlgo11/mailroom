@@ -6,7 +6,7 @@ const {encryptEmail} = require('./smimeService');
 
 class EmailService {
   async processIncomingEmail(stream, session) {
-    const email = new Email({from: session.envelope.from});
+    const email = new Email({id: session.id, from: session.envelope.mailFrom.address});
 
     // Parse email data
     await Promise.all([
@@ -27,6 +27,8 @@ class EmailService {
           try {
             let newEmail = JSON.parse(JSON.stringify(email));
             newEmail = await encryptEmail(rcpt, newEmail);
+            newEmail.headers['delivered-to'] = rcpt
+
             // Save S/MIME encrypted email
             await saveEmail(rcpt, newEmail);
           } catch (e) {

@@ -9,20 +9,18 @@ function startServer() {
     onRcptTo: smtpRouter.handleRcptTo,
     onData: smtpRouter.handleData,
     onMailFrom: smtpRouter.handleMailFrom,
-    logger: false,
-    disabledCommands: ['AUTH', 'RSET', 'HELP', 'VRFY', 'NOOP'],
+    logger: true,
+    disabledCommands: ['AUTH', 'HELP'],
     onConnect(session, callback) {
       console.log(`Client connected: ${session.remoteAddress}`);
 
       // Verify connection is for expected hostname
       if (session.servername !== process.env.INBOX_HOST) {
-        console.log(`Closing connection with ${session.remoteAddress}: Unknown hostname.`);
-        return callback(new Error('Unknown hostname'));
+        console.log(`Closing connection with ${session.remoteAddress}: Unknown hostname "${session.servername}".`);
+        return callback(new Error('5.1.2 Unknown hostname'));
       }
 
-      smtpRouter.handleConnect(session,callback);
-
-      callback();
+      smtpRouter.handleConnect(session).then((r) => callback(r))
     },
     onClose(session) {
       console.log(`Client disconnected: ${session.remoteAddress}`);
