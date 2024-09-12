@@ -4,12 +4,12 @@ Mail Room is a lightweight email handling system built with Node.js and Docker, 
 
 ## Services
 
-* __Controller__ - User management API
+* __Controller__ - Account management API
 * __Inbox__ - SMTP server for incoming emails
 * __Outbox__ - SMTP server for outgoing emails
 * __Dovecot__ - IMAP server
 * __Rspamd__ - Spam service
-* __Redis__ - Database
+* __Redis__ - Account database
 
 ## Requirements
 
@@ -24,12 +24,12 @@ To run the project you need a server with Docker and the following ports open:
 
 1. Run the installation script
    ```shell
-     curl https://raw.githubusercontent.com/Carlgo11/mailroom/master/install.sh | bash
+   curl https://raw.githubusercontent.com/Carlgo11/mailroom/master/install.sh | bash
    ```
 2. Edit the `.env` file
 3. Start the containers
    ```shell
-     docker compose up -d
+   docker compose up -d
    ```
 
 ### Manual configuration
@@ -79,6 +79,24 @@ Start the services using Docker Compose:
   ├── outbox/                # Outbox (Submission) server source
   └── rspamd/                # Rspamd service Docker build instructions
   ```
+
+## Current limitations
+The following features are currently not implemented:
+### Inbox
+- Multi-mailbox RCPT
+- DSN messages
+
+## Outbox
+- CC/BCC
+- DSN messages
+- Greylisting
+- Alias support
+- Status emails on message failure
+
+## Controller
+- DKIM certificate generation
+- TLSA record generation
+- Alias creation
 
 ## License
 
