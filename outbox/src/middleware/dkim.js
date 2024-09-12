@@ -18,37 +18,37 @@ class DKIMMiddleware {
   }
 
   async signEmail(email) {
-    // Ensure the private key is loaded
-    if (!this.privateKey) {
-      const keyPath = `${process.env.OUTBOX_DKIM_PATH}/${email.domain}.pem`;
-      await this.loadPrivateKey(keyPath);
-    }
-
-    // Combine headers and body to create the full email message
-    const headers = {
-      from: email.headers.from,
-      to: email.headers.to,
-      subject: email.headers.subject,
-      date: email.headers.date,
-    }
-    const headersString = email.serializeHeaders(headers);
-    const fullEmail = `${headersString}\r\n\r\n${email.body}`;
-
-    // Define the DKIM signature options
-    const dkimOptions = {
-      canonicalization: this.canonicalization,
-      algorithm: this.algorithm,
-      signatureData: [
-        {
-          signingDomain: this.domainName,
-          selector: this.selector,
-          privateKey: this.privateKey,
-          canonicalization: this.canonicalization,
-        },
-      ],
-    };
-
     try {
+      // Ensure the private key is loaded
+      if (!this.privateKey) {
+        const keyPath = `${process.env.OUTBOX_DKIM_PATH}/${email.domain}.key`;
+        await this.loadPrivateKey(keyPath);
+      }
+
+      // Combine headers and body to create the full email message
+      const headers = {
+        from: email.headers.from,
+        to: email.headers.to,
+        subject: email.headers.subject,
+        date: email.headers.date,
+      };
+
+      const headersString = email.serializeHeaders(headers);
+      const fullEmail = `${headersString}\r\n\r\n${email.body}`;
+
+      // Define the DKIM signature options
+      const dkimOptions = {
+        canonicalization: this.canonicalization,
+        algorithm: this.algorithm,
+        signatureData: [
+          {
+            signingDomain: this.domainName,
+            selector: this.selector,
+            privateKey: this.privateKey,
+            canonicalization: this.canonicalization,
+          }],
+      };
+
       // Sign the email using mailauth's dkimSign
       const signResult = await dkimSign(fullEmail, dkimOptions);
 
@@ -58,10 +58,10 @@ class DKIMMiddleware {
       }
 
       // Combine the DKIM signature with the original email
-      email.headers;
-      return `${signResult.signatures}\r\n${fullEmail}`;
+      return signResult.signatures.replace('DKIM-Signature:', '');
     } catch (error) {
-      throw new Error(`Failed to DKIM sign email: ${error.message}`);
+      console.error(`Failed to DKIM sign email: ${error.message}`);
+      return null;
     }
   }
 }

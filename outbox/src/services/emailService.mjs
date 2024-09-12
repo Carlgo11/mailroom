@@ -73,7 +73,7 @@ async function sendMessage(socket, {envelope, message}) {
 export async function processEmail(email, rcpt) {
   const domain = rcpt.split('@')[1];
   // const hosts = await fetchMX(domain);
-const hosts = ['172.18.0.4']
+const hosts = ['172.18.0.7'] //TODO: Remove from prod
   // Try each provided MX address
   for (let host of hosts) {
 

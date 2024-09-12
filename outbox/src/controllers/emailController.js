@@ -12,9 +12,9 @@ async function handleOutgoingEmail(stream, session) {
       email.parseSession(session),
     ]);
 
-    // const dkim = new DKIM({domainName: email.domain, selector: '_dkim'});
-    // await dkim.signEmail(email);
-
+    const dkim = new DKIM({domainName: email.domain, selector: '_dkim'});
+    const dkimSig = await dkim.signEmail(email);
+    if(dkimSig) email.addHeader('DKIM-Signature',dkimSig);
 
     const {processEmail} = await import('../services/emailService.mjs');
 

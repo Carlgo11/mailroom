@@ -1,6 +1,6 @@
 const SMTPServer = require('smtp-server').SMTPServer;
 const smtpRouter = require('../routes/smtpRouter');
-const {tlsConfig} = require('../config/tls');
+const {tlsConfig} = require('../config/incomingTLS');
 let server;
 
 function startServer() {
@@ -15,6 +15,12 @@ function startServer() {
       // Verify connection is for expected hostname
       if(session.servername !== process.env.OUTBOX_HOST)
         return callback(new Error('Unknown hostname'))
+
+      if(session.transmissionType !== 'ESMTP') {
+        const error = new Error('5.5.1 HELO not supported, use EHLO instead');
+        error.responseCode = 502;
+        return callback(error);
+      }
 
       return callback();
     },
