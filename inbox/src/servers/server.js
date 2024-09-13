@@ -3,34 +3,41 @@ const smtpRouter = require('../routes/smtpRouter');
 const {tlsConfig} = require('../config/tls');
 let server;
 
-function startServer() {
+async function startServer() {
+  const log = await import('../models/logging.mjs');
   server = new SMTPServer({
     ...tlsConfig,
     onRcptTo: smtpRouter.handleRcptTo,
     onData: smtpRouter.handleData,
     onMailFrom: smtpRouter.handleMailFrom,
-    logger: true,
+    // logger: true,
     disabledCommands: ['AUTH', 'HELP'],
     onConnect(session, callback) {
-      console.log(`Client connected: ${session.remoteAddress}`);
-
+      log.info(`${session.remoteAddress} connected`,session.id);
       smtpRouter.handleConnect(session).then((r) => callback(r))
     },
     onClose(session) {
-      console.log(`Client disconnected: ${session.remoteAddress}`);
+      log.info(`${session.remoteAddress} disconnected`,session.id);
+    },
+    onSecure: (socket, session, callback) => {
+      log.info(`connection upgraded to ${socket.getProtocol()} (${socket.getCipher().name})`,session.id);
+      return callback();
     },
   });
 
   server.on('error', (err) => {
     if(err['library'] === 'SSL routines'){
-      console.error(`TLS Error: ${err.reason} (${err.remote})`)
+      if(err.code === 'ERR_SSL_UNSUPPORTED_PROTOCOL')
+        log.info(`${err.remote} TLS negotiation failed.`)
+      else
+      log.debug(`TLS Error: ${err.reason} (${err.remote})`)
     }else {
-      console.error('Error: %s', err.reason);
+      log.error('Error: %s', err.reason);
     }
   });
 
   server.listen(process.env.INBOX_PORT, () => {
-    console.log(`Inbox server is running on port ${process.env.INBOX_PORT}`);
+    log.info(`Inbox server is listening on port ${process.env.INBOX_PORT}`);
   });
 }
 

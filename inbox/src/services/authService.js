@@ -2,6 +2,7 @@ const mailAuth = require('../validators/mailAuth');
 
 class AuthService {
   async validateEmail(message, session) {
+    const log = await import('../models/logging.mjs');
     const error = new Error();
     error.responseCode = 550;
 
@@ -9,12 +10,13 @@ class AuthService {
 
     if (process.env.INBOX_AUTH.includes('spf') && spf.status.result !== 'pass') {
       error.message = '5.7.1 SPF check failed.';
+      log.info('SPF failed',session.id)
       throw error;
     }
 
     if (process.env.INBOX_AUTH.includes('arc') && arc.status.result !== 'pass') {
       error.message = '5.7.1 ARC check failed.';
-      console.log(error);
+      log.info('ARC check failed', session.id);
       throw error;
     }
 
@@ -22,7 +24,7 @@ class AuthService {
       for (const {status} of dkim.results) {
         if (status.result !== 'pass') {
           error.message = '5.7.1 DKIM check failed.';
-          console.log(error);
+          log.info('DKIM check failed',session.id);
           throw error;
         }
       }
@@ -30,10 +32,9 @@ class AuthService {
 
     if (process.env.INBOX_AUTH.includes('dmarc') && dmarc.status.result !== 'pass') {
       error.message = '5.7.1 DMARC check failed.';
-      console.log(error);
+      log.info('DMARC check failed',session.id);
       throw error;
     }
-
   }
 }
 

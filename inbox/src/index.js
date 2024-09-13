@@ -1,3 +1,3 @@
 const {startServer} = require('./servers/server');
 
-startServer();
+startServer().then()
