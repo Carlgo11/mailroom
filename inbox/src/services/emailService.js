@@ -3,7 +3,7 @@ const authService = require('./authService');
 const spamService = require('./spamService');
 const {saveEmail} = require('./mailboxService');
 const {encryptEmail} = require('./smimeService');
-
+const userService = require('./userService');
 class EmailService {
   async processIncomingEmail(stream, session) {
     const email = new Email({id: session.id, from: session.envelope.mailFrom.address});
@@ -24,6 +24,10 @@ class EmailService {
     // Save the email for each recipient
     await Promise.all(
         email.to.map(async rcpt => {
+          console.log(rcpt);
+          // rewrite any alias
+          rcpt = userService.userExists(rcpt);
+
           try {
             let newEmail = JSON.parse(JSON.stringify(email));
             newEmail = await encryptEmail(rcpt, newEmail);

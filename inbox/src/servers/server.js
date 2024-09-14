@@ -13,11 +13,11 @@ async function startServer() {
     logger: process.env.NODE_ENV === 'development',
     disabledCommands: ['AUTH', 'HELP'],
     onConnect(session, callback) {
-      log.info(`${session.remoteAddress} connected`,session.id);
+      log.info(`${session.remoteAddress} connected. <${session.clientHostname}>`,session.id);
       smtpRouter.handleConnect(session).then((r) => callback(r))
     },
     onClose(session) {
-      log.info(`${session.remoteAddress} disconnected`,session.id);
+      log.info(`${session.remoteAddress} disconnected.`,session.id);
     },
     onSecure: (socket, session, callback) => {
       log.info(`connection upgraded to ${socket.getProtocol()} (${socket.getCipher().name})`,session.id);

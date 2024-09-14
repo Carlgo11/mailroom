@@ -1,10 +1,11 @@
 const RspamdService = require('../validators/rspamd');
 
 class SpamService {
-  async processRspamd(email, id) {
+  async processRspamd(email, session) {
     const log = await import('../models/logging.mjs');
+    const {id} = session;
     const rspamdService = new RspamdService();
-    const rspamd = await rspamdService.checkForSpam(email);
+    const rspamd = await rspamdService.checkForSpam(email,session);
     email.addHeader('X-Spam-Score', rspamd['score']);
 
     const error = new Error();
