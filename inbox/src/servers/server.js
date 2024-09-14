@@ -10,7 +10,7 @@ async function startServer() {
     onRcptTo: smtpRouter.handleRcptTo,
     onData: smtpRouter.handleData,
     onMailFrom: smtpRouter.handleMailFrom,
-    // logger: true,
+    logger: process.env.NODE_ENV === 'development',
     disabledCommands: ['AUTH', 'HELP'],
     onConnect(session, callback) {
       log.info(`${session.remoteAddress} connected`,session.id);

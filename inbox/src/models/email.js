@@ -97,6 +97,24 @@ class Email {
       Rcpt: this.to,
     };
   }
+
+  serializeHeaders(headers = this.headers) {
+    return Object.entries(headers).map(([key, value]) => {
+      // Check if value is an object with value and params
+      if (value && typeof value === 'object' && value.value) {
+        let headerValue = value.value;
+        if (value.params) {
+          const paramsString = Object.entries(value.params).
+              map(([paramKey, paramValue]) => `${paramKey}=${paramValue}`).
+              join('; ');
+          headerValue += `; ${paramsString}`;
+        }
+        return `${key}: ${headerValue}`;
+      }
+      // Otherwise, treat it as a simple string
+      return `${key}: ${value}`;
+    }).join('\r\n');
+  }
 }
 
 module.exports = Email;

@@ -7,10 +7,7 @@ class RspamdService {
 
   async checkForSpam(email) {
     try {
-      const headers = email.serialize();
-      const headerString = Object.entries(headers).map(([key, value]) => `${key}: ${value}`).join('\r\n');
-      const emailContent = `${headerString}\r\n\r\n${email.raw}`;
-
+      const emailContent = `${email.serializeHeaders()}\r\n\r\n${email.body}`
       const buffer = Buffer.from(emailContent, 'utf8');
       const response = await fetch(`${this.rspamdUrl}/checkv2`, {
         method: 'POST',
