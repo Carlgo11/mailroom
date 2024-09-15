@@ -30,7 +30,7 @@ class EmailService {
           try {
             let newEmail = JSON.parse(JSON.stringify(email));
             newEmail = await encryptEmail(rcpt, newEmail);
-            newEmail.addHeader('Delivered-To', rcpt);
+            newEmail.headers['Delivered-To'] =  rcpt;
 
             // Save S/MIME encrypted email
             await saveEmail(rcpt, newEmail);

@@ -62,10 +62,6 @@ class SMIMEService {
       });
 
       // Set the S/MIME Content-Type and related headers
-      email.removeHeader('content-type')
-      email.removeHeader('content-disposition')
-      email.removeHeader('content-transfer-encoding')
-
       email.headers['Content-Type'] = 'application/pkcs7-mime; name="smime.p7m"; smime-type=enveloped-data';
       email.headers['Content-Disposition'] = 'attachment; filename="smime.p7m"';
       email.headers['Content-Transfer-Encoding'] = 'base64';
