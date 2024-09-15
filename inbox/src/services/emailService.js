@@ -18,7 +18,7 @@ class EmailService {
       // Validate the email with SPF, DKIM, ARC, DMARC
       authService.validateEmail(email.raw, session),
       // Check for spam using Rspamd
-      spamService.processRspamd(email,session.id),
+      spamService.processRspamd(email, session),
     ]);
 
     // Save the email for each recipient

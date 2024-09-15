@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { simpleParser } = require('mailparser');
+const {simpleParser} = require('mailparser');
 
 class Email {
   constructor({
@@ -12,7 +12,7 @@ class Email {
     this.id = id;
     this.from = from;
     this.to = to;
-    this.headers = {}
+    this.headers = {};
     this.raw = raw;
     this.date = date;
   }
@@ -31,7 +31,8 @@ class Email {
           const headerEndIndex = emailData.search(/\r?\n\r?\n/);
 
           if (headerEndIndex !== -1) {
-            this.body = emailData.slice(headerEndIndex + emailData.match(/\r?\n\r?\n/)[0].length); // Skip the header boundary
+            this.body = emailData.slice(
+                headerEndIndex + emailData.match(/\r?\n\r?\n/)[0].length); // Skip the header boundary
           } else {
             // If no proper header end found, treat the entire email as body (this case should be rare)
             this.body = emailData;
@@ -40,12 +41,14 @@ class Email {
           // Parse headers into a structured object
           const parsedEmail = await simpleParser(emailData);
 
-          this.headers = {};
-          parsedEmail.headers.forEach((value, key) => {
-            if (typeof value === 'object' && value.text) {
-              this.headers[key] = value.text; // Use the 'text' representation for complex headers
+          const headers = emailData.split('\r\n\r\n')[0];
+          headers.split('\r\n').map(header => {
+            const key = header.split(':')[0];
+            const value = header.replace(`${key}: `, '');
+            if (Object.keys(this.headers).includes(key)) {
+              this.headers[key] = [this.headers[key], value];
             } else {
-              this.headers[key] = value; // Directly assign simple headers
+              this.headers[key] = value;
             }
           });
 
@@ -64,16 +67,24 @@ class Email {
     });
   }
 
-  parseSession(session){
+  parseSession(session) {
     this.ip = session.remoteAddress;
     this.from = session.envelope.mailFrom.address;
     this.to = session.envelope.rcptTo.map(r => r.address);
-    this.hostname = session.clientHostname;
+    this.hostNameAppearsAs = session.hostNameAppearsAs;
+    this.clientHostname = session.clientHostname
     return true;
   }
 
-  addHeader(name, value){
-    return this.headers[name] = value
+  addHeader(name, value) {
+    return this.headers[name] = value;
+  }
+
+  async removeHeader(name) {
+    return Object.keys(this.headers).map(async (header) => {
+      if(header.toLowerCase() === name.toLowerCase())
+        delete this.headers.header
+    })
   }
 
   generateID() {
@@ -82,34 +93,13 @@ class Email {
     return `${timestamp}.${randomPart}.${process.env.INBOX_HOST}`;
   }
 
-  // Method to add a recipient
-  addRecipient(recipient) {
-    this.to.push(recipient);
-  }
-
-  // Method to serialize the email for storage or transmission
-  serialize() {
-    return {
-      ...this.headers,
-      ID: this.id,
-      IP: this.ip,
-      Hostname: this.hostname,
-      Rcpt: this.to,
-    };
-  }
-
   serializeHeaders(headers = this.headers) {
     return Object.entries(headers).map(([key, value]) => {
       // Check if value is an object with value and params
-      if (value && typeof value === 'object' && value.value) {
-        let headerValue = value.value;
-        if (value.params) {
-          const paramsString = Object.entries(value.params).
-              map(([paramKey, paramValue]) => `${paramKey}=${paramValue}`).
-              join('; ');
-          headerValue += `; ${paramsString}`;
-        }
-        return `${key}: ${headerValue}`;
+      if (value && typeof value === 'object') {
+        return value.map(v => {
+          return `${key}: ${v}`;
+        }).join('\r\n');
       }
       // Otherwise, treat it as a simple string
       return `${key}: ${value}`;

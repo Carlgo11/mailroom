@@ -1,11 +1,8 @@
-const RspamdService = require('../validators/rspamd');
-
 class SpamService {
-  async processRspamd(email, session) {
+  async processRspamd(email) {
     const log = await import('../models/logging.mjs');
-    const {id} = session;
-    const rspamdService = new RspamdService();
-    const rspamd = await rspamdService.checkForSpam(email,session);
+    const {checkForSpam} = await import('../validators/rspamd.mjs');
+    const rspamd = await checkForSpam(email);
     email.addHeader('X-Spam-Score', rspamd['score']);
 
     const error = new Error();
@@ -13,26 +10,28 @@ class SpamService {
       case 'reject':
         error.responseCode = 550;
         error.message = '5.7.1 Message rejected as spam';
-        log.info('Message rejected as spam', id);
+        log.info('Message rejected as spam', email.id);
         throw error;
       case 'greylist':
         error.responseCode = 451;
         error.message = '4.7.1 Greylisting in effect, please try again later';
-        log.info('Message greylisted', id);
+        log.info('Message greylisted', email.id);
         throw error;
       case 'soft reject':
         error.responseCode = 450;
         error.message = '4.7.1 Soft reject, please try again later';
-        log.info('Message soft rejected', id);
+        log.info('Message soft rejected', email.id);
         throw error;
       case 'add header':
         email.addHeader('X-Spam-Status', 'Yes');
         email.addHeader('X-Spam-Flag', 'YES');
-        log.info('Message marked as spam', id);
+        log.info('Message marked as spam', email.id);
         break;
       case 'rewrite subject':
         email.subject = `[SPAM] ${email.subject}`;
-        log.info('Message marked as spam', id);
+        email.removeHeader('subject');
+        email.addHeader('subject', `[SPAM] ${email.subject}`);
+        log.info('Subject marked as spam', email.id);
         break;
     }
 

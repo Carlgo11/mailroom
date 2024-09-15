@@ -62,9 +62,13 @@ class SMIMEService {
       });
 
       // Set the S/MIME Content-Type and related headers
-      email.headers['content-type'] = 'application/pkcs7-mime; name="smime.p7m"; smime-type=enveloped-data';
-      email.headers['content-disposition'] = 'attachment; filename="smime.p7m"';
-      email.headers['content-transfer-encoding'] = 'base64';
+      email.removeHeader('content-type')
+      email.removeHeader('content-disposition')
+      email.removeHeader('content-transfer-encoding')
+
+      email.headers['Content-Type'] = 'application/pkcs7-mime; name="smime.p7m"; smime-type=enveloped-data';
+      email.headers['Content-Disposition'] = 'attachment; filename="smime.p7m"';
+      email.headers['Content-Transfer-Encoding'] = 'base64';
 
       // Update the email body with the encrypted content
       email.body = encryptedEmail;
