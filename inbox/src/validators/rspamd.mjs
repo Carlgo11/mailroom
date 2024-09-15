@@ -6,7 +6,7 @@ export async function checkForSpam(email) {
       headers: {
         'Pass': 'all',
         'Content-Type': 'application/octet-stream',
-        'Password': this.password,
+        'Password': process.env.RSPAMD_PASSWORD,
         'From': email.from,
         'Rcpt': email.to.join(', '),
         'Queue-Id': email.id,
