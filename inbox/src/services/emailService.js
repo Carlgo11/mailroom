@@ -23,15 +23,14 @@ class EmailService {
 
     // Save the email for each recipient
     await Promise.all(
-        email.to.map(async rcpt => {
-          console.log(rcpt);
+        email.to.map(async (rcpt) => {
           // rewrite any alias
-          rcpt = userService.userExists(rcpt);
+          rcpt = await userService.userExists(rcpt);
 
           try {
             let newEmail = JSON.parse(JSON.stringify(email));
             newEmail = await encryptEmail(rcpt, newEmail);
-            newEmail.headers['delivered-to'] = rcpt
+            newEmail.addHeader('Delivered-To', rcpt);
 
             // Save S/MIME encrypted email
             await saveEmail(rcpt, newEmail);
