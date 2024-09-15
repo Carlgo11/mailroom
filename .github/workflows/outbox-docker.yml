@@ -1,6 +1,9 @@
 name: Publish Outbox image
 
-on: [ push ]
+on:
+  push:
+    paths:
+      - outbox/**
 
 jobs:
   docker:

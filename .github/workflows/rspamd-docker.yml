@@ -3,7 +3,7 @@ name: Publish Rspamd image
 on:
   push:
     paths:
-      - inbox
+      - rspamd/**
 
 jobs:
   docker:
