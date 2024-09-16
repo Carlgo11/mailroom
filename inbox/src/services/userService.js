@@ -25,7 +25,7 @@ export async function userExists(username) {
       _get(`alias:${username}`),
     ]);
 
-    return user || alias || false;
+    return user ? username : alias || false;
 
   } catch (e) {
     console.error('Error checking user existence:', e);
