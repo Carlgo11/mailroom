@@ -26,18 +26,25 @@ async function startServer() {
   });
 
   server.on('error', (err) => {
-    if(err['library'] === 'SSL routines'){
-      if(err.code === 'ERR_SSL_UNSUPPORTED_PROTOCOL')
-        log.info(`${err.remote} TLS negotiation failed.`)
-      else
-      log.debug(`TLS Error: ${err.reason} (${err.remote})`)
-    }else {
+    if (err['library'] === 'SSL routines') {
+      switch(err.code){
+        case 'ERR_SSL_NO_SHARED_CIPHER':
+          log.info(`${err.remote} does not support any compatible TLS ciphers.`)
+          break;
+        case 'ERR_SSL_UNSUPPORTED_PROTOCOL':
+          log.info(`${err.remote} does not support any compatible TLS versions.`)
+          break;
+        default:
+          log.info(`TLS Error: ${err.reason} (${err.remote})`)
+          break;
+      }
+    } else {
       log.error('Error: %s', err.reason);
     }
   });
 
   server.listen(process.env.INBOX_PORT, () => {
-    log.info(`Inbox server is listening on port ${process.env.INBOX_PORT}`);
+    log.info(`Inbox server listening on port ${process.env.INBOX_PORT}`);
   });
 }
 

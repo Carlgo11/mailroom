@@ -1,43 +1,34 @@
 import tls from 'tls';
 import net from 'net';
 import {fetchMX, fetchTLSA} from './dnsService.mjs';
-import Module from "node:module";
+import Module from 'node:module';
+
+const {tlsOptions} = require('../config/outgoingTLS.js');
 
 const types = [undefined, 'sha256', 'sha512'];
 
-async function establishConnection(host, port, clientHost) {
-  return new Promise((resolve, reject) => {
-    const socket = net.connect(port, host);
+export async function processEmail(email, rcpt) {
+  const domain = rcpt.split('@')[1];
+  // const hosts = await fetchMX(domain);
+  const hosts = ['172.18.0.5']; //TODO: Remove from prod
+  // Try each provided MX address
+  for (let host of hosts) {
 
-    socket.on('data', (data) => {
-      const response = data.toString();
-      console.debug('Server response:', response);
+    // Create STARTTLS session with host
+    const socket = await establishConnection(host, 25, 'localhost');
 
-      if (response.startsWith('250')) {
-        socket.write('STARTTLS\r\n');
-      } else if (response.startsWith('220 Ready to start TLS')) {
-        console.debug('Starting TLS connection');
-        const secureSocket = tls.connect({
-          socket: socket, servername: host,
-          rejectUnauthorized: false,
-        }, () => {
-          console.debug('TLS connection established');
-          resolve(secureSocket);
-        });
+    // Validate TLSA records
+    const tlsa = await validateCert(socket, host);
+    if (!tlsa) throw new Error('Invalid TLSA');
 
-        secureSocket.on('error', (err) => reject(err));
+    console.debug('Starting message transfer');
+    const result = await sendMessage(socket, email.packageEmail());
 
-      } else if (response.startsWith('220')) {
-        socket.write(`EHLO ${clientHost}\r\n`);
-      }
-    });
-
-    socket.on('error', (err) => reject(err));
-
-    socket.on('timeout', () => reject(new Error('Connection timeout')));
-
-    socket.on('end', () => reject(new Error('Connection closed prematurely')));
-  });
+    // Only send return if server accepted the message.
+    if (result) return result;
+  }
+  // Return false if no hosts are found.
+  return false;
 }
 
 async function sendMessage(socket, {envelope, message}) {
@@ -70,29 +61,40 @@ async function sendMessage(socket, {envelope, message}) {
   });
 }
 
-export async function processEmail(email, rcpt) {
-  const domain = rcpt.split('@')[1];
-  // const hosts = await fetchMX(domain);
-const hosts = ['172.18.0.7'] //TODO: Remove from prod
-  // Try each provided MX address
-  for (let host of hosts) {
+async function establishConnection(host, port, clientHost) {
+  return new Promise((resolve, reject) => {
+    const socket = net.connect(port, host);
 
-    // Create STARTTLS session with host
-    const socket = await establishConnection(host, 25, 'localhost');
+    socket.on('data', (data) => {
+      const response = data.toString();
+      console.debug('Server response:', response);
 
-    // Validate TLSA records
-    const tlsa = await validateCert(socket, host);
-    if (!tlsa) throw new Error('Invalid TLSA');
+      if (response.startsWith('250')) {
+        socket.write('STARTTLS\r\n');
+      } else if (response.startsWith('220 Ready to start TLS')) {
+        console.debug('Starting TLS connection');
+        const secureSocket = tls.connect({
+          tlsOptions,
+          socket: socket,
+          servername: host,
+        }, () => {
+          console.debug('TLS connection established');
+          resolve(secureSocket);
+        });
 
-    console.debug('Starting message transfer');
-    const result = await sendMessage(socket, email.packageEmail());
+        secureSocket.on('error', (err) => reject(err));
 
-    // Only send return if server accepted the message.
-    if (result) return result;
-  }
-  // Return false if no hosts are found.
-  return false;
+      } else if (response.startsWith('220')) {
+        socket.write(`EHLO ${clientHost}\r\n`);
+      }
+    });
 
+    socket.on('error', (err) => reject(err));
+
+    socket.on('timeout', () => reject(new Error('Connection timeout')));
+
+    socket.on('end', () => reject(new Error('Connection closed prematurely')));
+  });
 }
 
 async function validateCert(socket, hostname) {

@@ -3,48 +3,56 @@ const smtpRouter = require('../routes/smtpRouter');
 const {tlsConfig} = require('../config/incomingTLS');
 let server;
 
-function startServer() {
+async function startServer() {
+  const log = await import('../models/logging.mjs');
   server = new SMTPServer({
     ...tlsConfig,
     onData: smtpRouter.handleData,
     onMailFrom: smtpRouter.handleMailFrom,
     onAuth: smtpRouter.handleAuth,
+    logger: process.env.NODE_ENV === 'development',
     onConnect(session, callback) {
-      console.log(`Client connected: ${session.remoteAddress}`);
-
-      // Verify connection is for expected hostname
-      if(session.servername !== process.env.OUTBOX_HOST)
-        return callback(new Error('Unknown hostname'))
-
-      if(session.transmissionType !== 'ESMTP') {
-        const error = new Error('5.5.1 HELO not supported, use EHLO instead');
-        error.responseCode = 502;
-        return callback(error);
-      }
-
+      log.info(`${session.remoteAddress} connected. <${session.clientHostname}>`, session.id);
       return callback();
     },
     onClose(session) {
-      console.log(`Client disconnected: ${session.remoteAddress}`);
+      log.info(`${session.remoteAddress} disconnected.`, session.id);
+    },
+    onSecure: (socket, session, callback) => {
+      log.info(
+          `connection upgraded to ${socket.getProtocol()} (${socket.getCipher().name})`,
+          session.id);
+      return callback();
     },
   });
 
   server.on('error', (err) => {
-    if(err['library'] === 'SSL routines'){
-      console.error(`TLS Error: ${err.reason} (${err.remote})`)
-    }else {
-      console.error('Error: %s', err.reason);
+    if (err['library'] === 'SSL routines') {
+      switch (err.code) {
+        case 'ERR_SSL_NO_SHARED_CIPHER':
+          log.info(`${err.remote} does not support any compatible TLS ciphers.`);
+          break;
+        case 'ERR_SSL_UNSUPPORTED_PROTOCOL':
+          log.info(`${err.remote} does not support any compatible TLS versions.`);
+          break;
+        default:
+          log.info(`TLS Error: ${err.reason} (${err.remote})`);
+          break;
+      }
+    } else {
+      err.reason ?
+          log.error(`Error: ${err.reason}`):
+          log.error(err);
     }
   });
 
-  server.listen(process.env.OUTBOX_PORT, () => {
-    console.log(`Submission Server is running on port ${process.env.OUTBOX_PORT}`);
-  });
+  server.listen(process.env.OUTBOX_PORT, () =>
+      log.info(`Outbox server listening on port ${process.env.OUTBOX_PORT}`));
 }
 
-function stopServer(){
+function stopServer() {
   server.close(() => {
-    console.log('MX Server stopped');
+    console.log('Outbox server stopped');
     process.exit(0);
   });
 }

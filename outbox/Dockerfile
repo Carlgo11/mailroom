@@ -6,8 +6,10 @@ ENV OUTBOX_HOST="mail.example.com"
 ENV OUTBOX_TLS_KEY_PATH="/certs/outbox/privkey.pem"
 ENV OUTBOX_TLS_CERT_PATH="/certs/outbox/cert.pem"
 ENV OUTBOX_TLS_MIN_VERSION="TLSv1.2"
+ENV OUTBOX_DKIM_PATH="/certs/dkim"
 ENV REDIS_HOST="redis_mail"
 ENV REDIS_PORT="6379"
+ENV OUTBOX_LOG_FILE="/tmp/outbox.log"
 
 # Set the working directory inside the container
 WORKDIR /usr/src/outbox
