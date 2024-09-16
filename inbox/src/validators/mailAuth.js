@@ -1,6 +1,9 @@
-const {authenticate} = require('mailauth');
+import Module from "node:module";
 
-async function Validate(message, {remoteAddress, hostNameAppearsAs, envelope}) {
+const require = Module.createRequire(import.meta.url);
+
+export async function Validate(message, {remoteAddress, hostNameAppearsAs, envelope}) {
+  const {authenticate} = require('mailauth');
   return authenticate(message, {
     ip: remoteAddress,
     helo: hostNameAppearsAs,
@@ -8,5 +11,3 @@ async function Validate(message, {remoteAddress, hostNameAppearsAs, envelope}) {
     mta: process.env.INBOX_HOST,
   });
 }
-
-module.exports = {Validate};

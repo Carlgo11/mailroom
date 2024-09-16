@@ -1,4 +1,4 @@
-const redis = require('redis');
+import redis from 'redis';
 
 // Create a Redis client
 const client = redis.createClient({
@@ -11,41 +11,32 @@ client.connect().
     then(() => console.log('Connected to Redis')).
     catch((e) => console.error('Failed to connect to Redis:', e));
 
-class UserService {
-  // Check if a user exists
-  async userExists(user) {
-    try {
-      // Check if the user exists directly
-      const userExists = await this._exists(`user:${user}`);
-      if (userExists) return user;  // User exists as is
+/**
+ * Check if a mail account exists
+ *
+ * @param username Username to check for
+ * @returns {Promise<string|boolean>} Returns username if the address exists or is an alias. Returns false if no user or alias by that name exists.
+ */
+export async function userExists(username) {
+  try {
+    // Run both user and alias checks concurrently
+    const [user, alias] = await Promise.all([
+      _get(`user:${username}`),
+      _get(`alias:${username}`),
+    ]);
 
-      // If the user doesn't exist, check for an alias
-      const aliasExists = await this._exists(`alias:${user}`);
-      if (aliasExists) return await this._get(`alias:${user}`);  // Return the aliased delivery email address
+    return user || alias || false;
 
-      // Neither user nor alias exists
-      return false;
-    } catch (error) {
-      console.error('Error checking user existence:', error);
-      throw error;
-    }
-  }
-
-  // Private method to check if a key exists in Redis
-  _exists(key) {
-    return client.exists(key).then((reply) => reply === 1).catch((e) => {
-      console.error('Redis _exists check error:', e);
-      throw e;
-    });
-  }
-
-  // Private method to get a value from Redis
-  _get(key) {
-    return client.get(key).then((reply) => reply).catch((e) => {
-      console.error('Redis _get error:', e);
-      throw e;
-    });
+  } catch (e) {
+    console.error('Error checking user existence:', e);
+    throw e;
   }
 }
 
-module.exports = new UserService();
+// Private method to get a value from Redis
+async function _get(key) {
+  return client.get(key).then((reply) => reply).catch((e) => {
+    console.error('Redis _get error:', e);
+    throw e;
+  });
+}

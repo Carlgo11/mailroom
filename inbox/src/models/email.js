@@ -1,5 +1,7 @@
-const crypto = require('crypto');
-const {simpleParser} = require('mailparser');
+import * as crypto from 'node:crypto';
+import Module from 'node:module';
+
+const require = Module.createRequire(import.meta.url);
 
 class Email {
   constructor({
@@ -18,6 +20,7 @@ class Email {
   }
 
   async parseStream(stream) {
+    const {simpleParser} = require('mailparser');
     return new Promise(async (resolve, reject) => {
       let emailData = '';
 
@@ -72,7 +75,7 @@ class Email {
     this.from = session.envelope.mailFrom.address;
     this.to = session.envelope.rcptTo.map(r => r.address);
     this.hostNameAppearsAs = session.hostNameAppearsAs;
-    this.clientHostname = session.clientHostname
+    this.clientHostname = session.clientHostname;
     return true;
   }
 
@@ -82,9 +85,9 @@ class Email {
 
   async removeHeader(name) {
     return Object.keys(this.headers).map(async (header) => {
-      if(header.toLowerCase() === name.toLowerCase())
-        delete this.headers.header
-    })
+      if (header.toLowerCase() === name.toLowerCase())
+        delete this.headers.header;
+    });
   }
 
   generateID() {
@@ -107,4 +110,4 @@ class Email {
   }
 }
 
-module.exports = Email;
+export default Email;

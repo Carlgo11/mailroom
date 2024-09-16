@@ -1,14 +1,8 @@
-const {exec} = require('child_process');
-const fs = require('fs').promises;
-const path = require('path');
+import exec from 'child_process';
+import fs from 'fs/promises';
+import path from 'path';
 
-class SMIMEService {
-  constructor() {
-    this.encryptEmail = this.encryptEmail.bind(this);
-    this.serializeHeaders = this.serializeHeaders.bind(this);
-  }
-
-  async encryptEmail(rcpt, email) {
+ export async function encryptEmail(rcpt, email) {
     const rcptCert = path.join(process.env.CLIENT_CERT_PATH, `${rcpt}.pem`);
     const mailPath = path.join('/tmp', `encrypted-${Date.now()}.eml`);
     const tempInputPath = path.join('/tmp', `input-${Date.now()}.eml`);
@@ -21,7 +15,7 @@ class SMIMEService {
     }
 
     // Serialize headers
-    const headersString = this.serializeHeaders(email.headers);
+    const headersString = serializeHeaders(email.headers);
     const fullEmail = `${headersString}\r\n\r\n${email.body}`;
 
     try {
@@ -36,7 +30,8 @@ class SMIMEService {
         exec(opensslCmd, async (error, stdout, stderr) => {
           if (error) {
             // Clean up the temporary input file in case of error
-            await fs.unlink(tempInputPath).catch(() => {});
+            await fs.unlink(tempInputPath).catch(() => {
+            });
             return reject(new Error(`Encryption failed: ${stderr}`));
           }
 
@@ -76,7 +71,7 @@ class SMIMEService {
   }
 
   // Method to serialize headers
-  serializeHeaders(headers) {
+  function serializeHeaders(headers) {
     return Object.entries(headers).map(([key, value]) => {
       // Check if value is an object with value and params
       if (value && typeof value === 'object' && value.value) {
@@ -93,6 +88,3 @@ class SMIMEService {
       return `${key}: ${value}`;
     }).join('\r\n');
   }
-}
-
-module.exports = new SMIMEService();

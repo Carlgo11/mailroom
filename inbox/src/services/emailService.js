@@ -1,12 +1,16 @@
-const Email = require('../models/email');
-const authService = require('./authService');
-const spamService = require('./spamService');
-const {saveEmail} = require('./mailboxService');
-const {encryptEmail} = require('./smimeService');
-const userService = require('./userService');
-class EmailService {
+import Email from '../models/email.js';
+import authenticateMessage from './authService.js';
+import processRspamd from './spamService.js';
+import saveEmail from './mailboxService.js';
+import {encryptEmail} from './smimeService.js';
+import {userExists} from './userService.js';
+
+export class EmailService {
   async processIncomingEmail(stream, session) {
-    const email = new Email({id: session.id, from: session.envelope.mailFrom.address});
+    const email = new Email({
+      id: session.id,
+      from: session.envelope.mailFrom.address,
+    });
 
     // Parse email data
     await Promise.all([
@@ -16,21 +20,21 @@ class EmailService {
 
     await Promise.all([
       // Validate the email with SPF, DKIM, ARC, DMARC
-      authService.validateEmail(email.raw, session),
+      authenticateMessage(email.raw, session),
       // Check for spam using Rspamd
-      spamService.processRspamd(email, session),
+      processRspamd(email, session),
     ]);
 
     // Save the email for each recipient
     await Promise.all(
         email.to.map(async (rcpt) => {
           // rewrite any alias
-          rcpt = await userService.userExists(rcpt);
+          rcpt = await userExists(rcpt);
 
           try {
             let newEmail = JSON.parse(JSON.stringify(email));
             newEmail = await encryptEmail(rcpt, newEmail);
-            newEmail.headers['Delivered-To'] =  rcpt;
+            newEmail.headers['Delivered-To'] = rcpt;
 
             // Save S/MIME encrypted email
             await saveEmail(rcpt, newEmail);
@@ -44,4 +48,4 @@ class EmailService {
   }
 }
 
-module.exports = new EmailService();
+export default new EmailService();

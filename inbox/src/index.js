@@ -1,3 +1,3 @@
-const {startServer} = require('./servers/server');
+import startServer from './servers/server.js';
 
-startServer().then()
+startServer().then();

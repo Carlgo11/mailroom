@@ -1,10 +1,13 @@
-const SMTPServer = require('smtp-server').SMTPServer;
-const smtpRouter = require('../routes/smtpRouter');
-const {tlsConfig} = require('../config/tls');
+import * as log from '../models/logging.js';
+import * as smtpRouter from '../routes/smtpRouter.js';
+import {tlsConfig} from '../config/tls.js';
+import Module from "node:module";
+
+const require = Module.createRequire(import.meta.url);
 let server;
 
-async function startServer() {
-  const log = await import('../models/logging.mjs');
+export async function startServer() {
+  const SMTPServer = require('smtp-server').SMTPServer;
   server = new SMTPServer({
     ...tlsConfig,
     onRcptTo: smtpRouter.handleRcptTo,
@@ -58,4 +61,4 @@ function stopServer() {
 process.on('SIGTERM', () => stopServer());
 process.on('SIGINT', () => stopServer());
 
-module.exports = {startServer};
+export default startServer;
