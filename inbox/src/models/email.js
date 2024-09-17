@@ -3,13 +3,14 @@ import Module from 'node:module';
 
 const require = Module.createRequire(import.meta.url);
 
-class Email {
+export default class Email {
   constructor({
                 id = this.generateID(),
                 from = '',
                 to = [],
                 raw = '',
                 date = new Date().toISOString(),
+                subject = '',
               } = {}) {
     this.id = id;
     this.from = from;
@@ -17,46 +18,31 @@ class Email {
     this.headers = {};
     this.raw = raw;
     this.date = date;
+    this.subject = subject;
   }
 
   async parseStream(stream) {
     const {simpleParser} = require('mailparser');
+
+    let data = '';
+
+    stream.on('data', (chunk) => data += chunk.toString());
+
     return new Promise(async (resolve, reject) => {
-      let emailData = '';
-
-      stream.on('data', (chunk) => emailData += chunk.toString());
-
       stream.on('end', async () => {
-        this.raw = emailData;
+        this.raw = data;
 
         try {
-          // Find the end of headers (ensure to cover both \r\n\r\n and \n\n cases)
-          const headerEndIndex = emailData.search(/\r?\n\r?\n/);
+          const [headers, body] = data.split('\r\n\r\n');
 
-          if (headerEndIndex !== -1) {
-            this.body = emailData.slice(
-                headerEndIndex + emailData.match(/\r?\n\r?\n/)[0].length); // Skip the header boundary
+          if (headers) {
+            this.body = body;
+            this.parseHeaders(headers);
+            this.subject = (await simpleParser(body)).subject || '';
           } else {
-            // If no proper header end found, treat the entire email as body (this case should be rare)
-            this.body = emailData;
+            // If no proper header end found, treat the entire email as body
+            this.body = data;
           }
-
-          // Parse headers into a structured object
-          const parsedEmail = await simpleParser(emailData);
-
-          const headers = emailData.split('\r\n\r\n')[0];
-          headers.split('\r\n').map(header => {
-            const key = header.split(':')[0];
-            const value = header.replace(`${key}: `, '');
-            if (Object.keys(this.headers).includes(key)) {
-              this.headers[key] = [this.headers[key], value];
-            } else {
-              this.headers[key] = value;
-            }
-          });
-
-          // Optionally extract other properties if needed
-          this.subject = parsedEmail.subject || '';
 
           resolve();
         } catch (err) {
@@ -67,6 +53,17 @@ class Email {
       stream.on('error', (err) => reject(
           new Error(`Error processing incoming email: ${err.message}`),
       ));
+    });
+  }
+
+  parseHeaders(headers) {
+    headers.split('\r\n').map(async (header) => {
+      const key = header.split(':')[0];
+      const value = header.replace(`${key}: `, '');
+      if (Object.keys(this.headers).includes(key))
+        this.headers[key] = [this.headers[key], value];
+      else
+        this.headers[key] = value;
     });
   }
 
@@ -81,6 +78,13 @@ class Email {
 
   addHeader(name, value) {
     return this.headers[name] = value;
+  }
+
+  async getHeader(name) {
+    return Object.keys(this.headers).map(async (header) => {
+      if (header.toLowerCase() === name.toLowerCase())
+        return this.headers.header;
+    });
   }
 
   async removeHeader(name) {
@@ -109,5 +113,3 @@ class Email {
     }).join('\r\n');
   }
 }
-
-export default Email;

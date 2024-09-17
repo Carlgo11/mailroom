@@ -16,7 +16,7 @@ export async function checkForSpam(email) {
       },
       body: Buffer.from(emailContent, 'utf8'),
     });
-    return await res.json();
+    return res.json();
   } catch (error) {
     console.error('Error checking email for spam:', error);
     throw new Error('Spam check failed');
