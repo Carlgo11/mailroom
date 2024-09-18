@@ -73,6 +73,7 @@ export default class Email {
     this.to = session.envelope.rcptTo.map(r => r.address);
     this.hostNameAppearsAs = session.hostNameAppearsAs;
     this.clientHostname = session.clientHostname;
+    this.remoteAddress = session.remoteAddress;
     return true;
   }
 
