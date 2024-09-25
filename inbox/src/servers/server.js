@@ -48,7 +48,7 @@ export function startServer() {
           break;
       }
     } else {
-      Log.error('Error: %s', err.reason);
+      Log.error(`Error: ${err.reason || err}`);
     }
   });
 
