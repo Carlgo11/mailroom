@@ -41,20 +41,20 @@ export async function handleData(stream, session, callback) {
 }
 
 export async function handleConnect({remoteAddress, id}) {
-   const [spamhaus, ipqs, _]  = await Promise.all([
-     Spamhaus.lookupIP(remoteAddress),
-     ipQS.lookupIP(remoteAddress),
-     ipScore.lookupIP(remoteAddress),
-  ])
+  const [spamhaus, ipqs, _] = await Promise.all([
+    Spamhaus.lookupIP(remoteAddress),
+    ipQS.lookupIP(remoteAddress),
+    ipScore.lookupIP(remoteAddress),
+  ]);
 
   if (spamhaus) {
     Log.info(`${remoteAddress} blacklisted by Spamhaus.`, id);
     return new Error('IP blacklisted by Spamhaus <https://check.spamhaus.org/>');
   }
 
-  if(ipqs > 90){
-    Log.info(`${remoteAddress} fraud score ${ipqs}.`)
-    return new Error('IP reported as malicious by IPQS <https://ipqualityscore/>')
+  if (ipqs > process.env.IPQS_SCORE_LIMIT) {
+    Log.info(`${remoteAddress} fraud score ${ipqs}.`);
+    return new Error('IP reported as malicious by IPQS <https://ipqualityscore/>');
   }
 
   return null;

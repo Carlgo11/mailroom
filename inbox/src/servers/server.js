@@ -19,7 +19,10 @@ export function startServer() {
       Log.info(
           `${session.remoteAddress} connected. <${session.clientHostname}>`,
           session.id);
-      smtpRouter.handleConnect(session).then((r) => callback(r));
+      smtpRouter.handleConnect(session).then((r) => callback(r)).catch(e => {
+        Log.info(e.message, session.id);
+        callback(e);
+      });
     },
     onClose(session) {
       Log.info(`${session.remoteAddress} disconnected.`, session.id);
