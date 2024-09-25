@@ -41,7 +41,7 @@ export async function handleData(stream, session, callback) {
 }
 
 export async function handleConnect({remoteAddress, id}) {
-   const [spamhaus, ipqs, _]  = await new Promise.all([
+   const [spamhaus, ipqs, _]  = await Promise.all([
      Spamhaus.lookupIP(remoteAddress),
      ipQS.lookupIP(remoteAddress),
      ipScore.lookupIP(remoteAddress),
