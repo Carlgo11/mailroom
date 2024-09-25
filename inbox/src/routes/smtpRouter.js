@@ -2,6 +2,8 @@ import {handleIncomingEmail} from '../controllers/emailController.js';
 import {userExists} from '../services/userService.js';
 import Log from '../services/logService.js';
 import Spamhaus from '../validators/spamhaus.js';
+import ipScore from '../validators/ipScore.js';
+import ipQS from '../validators/ipQS.js';
 
 export async function handleRcptTo(address, session, callback) {
   if (!await userExists(address.address)) {
@@ -39,9 +41,21 @@ export async function handleData(stream, session, callback) {
 }
 
 export async function handleConnect({remoteAddress, id}) {
-  if (await Spamhaus.lookupIP(remoteAddress)) {
+   const [spamhaus, ipqs, _]  = await new Promise.all([
+     Spamhaus.lookupIP(remoteAddress),
+     ipQS.lookupIP(remoteAddress),
+     ipScore.lookupIP(remoteAddress),
+  ])
+
+  if (spamhaus) {
     Log.info(`${remoteAddress} blacklisted by Spamhaus.`, id);
     return new Error('IP blacklisted by Spamhaus <https://check.spamhaus.org/>');
   }
+
+  if(ipqs > 90){
+    Log.info(`${remoteAddress} fraud score ${ipqs}.`)
+    return new Error('IP reported as malicious by IPQS <https://ipqualityscore/>')
+  }
+
   return null;
 }
