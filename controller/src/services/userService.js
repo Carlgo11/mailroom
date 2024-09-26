@@ -1,6 +1,5 @@
 import {createClient} from 'redis';
 import bcrypt from 'bcrypt';
-import {get} from 'node:http';
 
 // Create a Redis client
 const client = await createClient({

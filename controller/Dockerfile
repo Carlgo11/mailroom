@@ -1,4 +1,4 @@
-FROM node:alpine
+FROM node:slim
 WORKDIR /usr/src/controller
 
 ENV REDIS_HOST="redis_mail"

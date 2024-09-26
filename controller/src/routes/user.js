@@ -5,14 +5,13 @@ import {generateCertificate} from '../services/clientCertService.js';
 const router = Router();
 
 router.post('/users/register', async (req, res) => {
-  console.log(req.body.username, req.body.password);
   try {
     const status = await register(req.body.username, req.body.password);
     return res.status(201).
         send(JSON.stringify(status));
   } catch (err) {
-    console.log(err);
-    res.status(500).send(err.message);
+    console.error(err);
+    return res.status(500).send(err.message);
   }
 });
 
@@ -24,6 +23,7 @@ router.get('/users/', async (req, res) => {
   const users = await listUsers();
   return res.send(JSON.stringify(users));
 })
+
 router.get('/users/:user/certificate', async (req, res) => {
   try {
     const cert = generateCertificate(req.params['user']);
