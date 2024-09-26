@@ -1,0 +1,5 @@
+{
+  "main": "dist/mailadmin.js",
+  "output": "/tmp/sea-prep.blob",
+  "disableExperimentalSEAWarning": true
+}
