@@ -19,11 +19,12 @@ export class ipScoreValidator {
           });
 
       const {blacklists} = await res.json();
-      Object.keys(blacklists).forEach(list => {
+      for (const list of Object.keys(blacklists)) {
         if (blacklists[list] === 'listed')
-          throw new Error(`IP ${address} reported suspicious by ${list}.`);
-      });
+          return new Error(`IP ${address} reported suspicious by ${list}.`);
+      }
     }
+    return null;
   }
 }
 

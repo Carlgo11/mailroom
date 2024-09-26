@@ -41,7 +41,7 @@ export async function handleData(stream, session, callback) {
 }
 
 export async function handleConnect({remoteAddress, id}) {
-  const [spamhaus, ipqs, _] = await Promise.all([
+  const [spamhaus, ipqs, ipscore] = await Promise.all([
     Spamhaus.lookupIP(remoteAddress),
     ipQS.lookupIP(remoteAddress),
     ipScore.lookupIP(remoteAddress),
@@ -57,5 +57,5 @@ export async function handleConnect({remoteAddress, id}) {
     return new Error('IP reported as malicious by IPQS <https://ipqualityscore/>');
   }
 
-  return null;
+  return ipscore;
 }
