@@ -1,34 +1,31 @@
-const {authenticate} = require('../services/authService');
-const handleOutgoingEmail = require('../controllers/emailController');
+import authService from '../services/authService.js';
+import handleOutgoingEmail from '../controllers/emailController.js';
+import log from '../services/logService.js';
 
-class SMTPRouter {
+export function handleMailFrom(address, session, callback) {
+  if (address.address !== session.user)
+    return callback(new Error('Address differs from username'));
 
-  handleMailFrom(address, session, callback) {
-    if (address.address !== session.user) {
-      return callback(new Error('Address differs from username'));
-    }
+  return callback();
+}
+
+export async function handleData(stream, session, callback) {
+  try {
+    await handleOutgoingEmail(stream, session);
     return callback();
-  }
-
-  async handleData(stream, session, callback) {
-    try {
-      await handleOutgoingEmail(stream, session);
-      callback();
-    } catch (e) {
-      callback(e);
-    }
-  }
-
-  handleAuth(auth, session, callback) {
-    const {username, password} = auth;
-    const result = authenticate(username, password);
-    if (result)
-      return callback(null, {user: username});
-
-    const error = new Error('5.7.8 Authentication failed');
-    error.responseCode = 535;
-    return callback(error);
+  } catch (e) {
+    return callback(e);
   }
 }
 
-module.exports = new SMTPRouter();
+export async function handleAuth({username, password}, session, callback) {
+  try {
+    if (await authService.authenticate(username, password))
+      return callback(null, {user: username});
+  } catch (e) {
+    log.error(e);
+  }
+  const error = new Error('5.7.8 Authentication failed');
+  error.responseCode = 535;
+  return callback(error);
+}

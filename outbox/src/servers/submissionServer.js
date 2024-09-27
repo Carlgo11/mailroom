@@ -1,18 +1,22 @@
-const SMTPServer = require('smtp-server').SMTPServer;
-const smtpRouter = require('../routes/smtpRouter');
-const {tlsConfig} = require('../config/incomingTLS');
+import log from '../services/logService.js';
+import * as smtpRouter from '../routes/smtpRouter.js';
+import {tlsConfig} from '../config/incomingTLS.js';
+import Module from 'node:module';
+
+const require = Module.createRequire(import.meta.url);
 let server;
 
-async function startServer() {
-  const log = await import('../models/logging.mjs');
+export async function startServer() {
+  const SMTPServer = require('smtp-server').SMTPServer;
   server = new SMTPServer({
     ...tlsConfig,
-    onData: smtpRouter.handleData,
+    onData: await smtpRouter.handleData,
     onMailFrom: smtpRouter.handleMailFrom,
-    onAuth: smtpRouter.handleAuth,
+    onAuth: await smtpRouter.handleAuth,
     logger: process.env.NODE_ENV === 'development',
     onConnect(session, callback) {
-      log.info(`${session.remoteAddress} connected. <${session.clientHostname}>`, session.id);
+      log.info(`${session.remoteAddress} connected. <${session.clientHostname}>`,
+          session.id);
       return callback();
     },
     onClose(session) {
@@ -30,19 +34,19 @@ async function startServer() {
     if (err['library'] === 'SSL routines') {
       switch (err.code) {
         case 'ERR_SSL_NO_SHARED_CIPHER':
-          log.info(`${err.remote} does not support any compatible TLS ciphers.`);
+          log.info(
+              `${err.remote} does not support any compatible TLS ciphers.`);
           break;
         case 'ERR_SSL_UNSUPPORTED_PROTOCOL':
-          log.info(`${err.remote} does not support any compatible TLS versions.`);
+          log.info(
+              `${err.remote} does not support any compatible TLS versions.`);
           break;
         default:
           log.info(`TLS Error: ${err.reason} (${err.remote})`);
           break;
       }
     } else {
-      err.reason ?
-          log.error(`Error: ${err.reason}`):
-          log.error(err);
+      log.error(`Error: ${err.reason || err}`);
     }
   });
 
@@ -60,4 +64,4 @@ function stopServer() {
 process.on('SIGTERM', () => stopServer());
 process.on('SIGINT', () => stopServer());
 
-module.exports = {startServer: startServer};
+export default startServer;

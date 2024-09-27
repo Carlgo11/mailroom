@@ -1,7 +1,11 @@
-const crypto = require('crypto');
-const { simpleParser } = require('mailparser');
-const excludedHeaders = ['user-agent', ]
-class Email {
+import crypto from 'crypto';
+import Module from 'node:module';
+
+const require = Module.createRequire(import.meta.url);
+
+const excludedHeaders = ['user-agent'];
+
+export class Email {
   constructor({
                 id = this.generateID(),
                 from = '',
@@ -13,14 +17,15 @@ class Email {
     this.id = id;
     this.from = from;
     this.to = to;
-    this.headers = {}
+    this.headers = {};
     this.raw = raw;
     this.pgp = pgp;
-    this.domain = domain
+    this.domain = domain;
   }
 
   async parseStream(stream) {
-    return new Promise(async (resolve, reject) => {
+    const {simpleParser} = require('mailparser');
+    return new Promise((resolve, reject) => {
       let emailData = '';
 
       stream.on('data', (chunk) => emailData += chunk.toString());
@@ -33,7 +38,8 @@ class Email {
           const headerEndIndex = emailData.search(/\r?\n\r?\n/);
 
           if (headerEndIndex !== -1) {
-            this.body = emailData.slice(headerEndIndex + emailData.match(/\r?\n\r?\n/)[0].length); // Skip the header boundary
+            this.body = emailData.slice(
+                headerEndIndex + emailData.match(/\r?\n\r?\n/)[0].length); // Skip the header boundary
           } else {
             // If no proper header end found, treat the entire email as body (this case should be rare)
             this.body = emailData;
@@ -44,7 +50,7 @@ class Email {
 
           this.headers = {};
           parsedEmail.headers.forEach((value, key) => {
-            if(!excludedHeaders.includes(key.toString().toLowerCase())) {
+            if (!excludedHeaders.includes(key.toString().toLowerCase())) {
               if (typeof value === 'object' && value.text) {
                 this.headers[key] = value.text; // Use the 'text' representation for complex headers
               } else {
@@ -55,7 +61,8 @@ class Email {
 
           // Optionally extract other properties if needed
           this.subject = parsedEmail.subject || '';
-          this.headers['contend-type'] = this.headers['contend-type'] || 'text/plain';
+          this.headers['contend-type'] = this.headers['contend-type'] ||
+              'text/plain';
 
           resolve();
         } catch (err) {
@@ -69,7 +76,7 @@ class Email {
     });
   }
 
-  parseSession(session){
+  parseSession(session) {
     this.ip = session.remoteAddress;
     this.from = session.envelope.mailFrom.address;
     this.domain = this.from.split('@')[1];
@@ -78,8 +85,9 @@ class Email {
     return true;
   }
 
-  addHeader(name, value){
-    return this.headers[name] = value
+  addHeader(name, value) {
+    this.headers[name] = value;
+    return this.headers[name];
   }
 
   generateID() {
@@ -89,7 +97,7 @@ class Email {
   }
 
   /**
-   Method to serialize the email for storage or transmission
+   * Method to serialize the email for storage or transmission
    */
   serialize() {
     return {
@@ -101,19 +109,19 @@ class Email {
     };
   }
 
-  serializeHeaders(headers = this.headers){
+  serializeHeaders(headers = this.headers) {
     return Object.entries(headers).map(([key, value]) => {
-        if (value && typeof value === 'object' && value.value) {
-          let headerValue = value.value;
-          if (value.params) {
-            const paramsString = Object.entries(value.params).
-                map(([paramKey, paramValue]) => `${paramKey}=${paramValue}`).
-                join('; ');
-            headerValue += `; ${paramsString}`;
-          }
-          return `${key}: ${headerValue}`;
+      if (value && typeof value === 'object' && value.value) {
+        let headerValue = value.value;
+        if (value.params) {
+          const paramsString = Object.entries(value.params).
+              map(([paramKey, paramValue]) => `${paramKey}=${paramValue}`).
+              join('; ');
+          headerValue += `; ${paramsString}`;
         }
-        return `${key}: ${value}`;
+        return `${key}: ${headerValue}`;
+      }
+      return `${key}: ${value}`;
     }).join('\r\n');
   }
 
@@ -126,9 +134,9 @@ class Email {
     };
     return {
       envelope,
-      message: `${headers}\r\n\r\n${this.body}`
+      message: `${headers}\r\n\r\n${this.body}`,
     };
   }
 }
 
-module.exports = Email;
+export default Email;

@@ -1,7 +1,7 @@
-const fs = require('fs');
-require('dotenv').config();
+import fs from 'fs';
+import 'dotenv/config';
 
-const tlsConfig = {
+export const tlsConfig = {
   secure: true,
   key: fs.readFileSync(process.env.OUTBOX_TLS_KEY_PATH || process.env.TLS_KEY_PATH),
   cert: fs.readFileSync(process.env.OUTBOX_TLS_CERT_PATH || process.env.TLS_CERT_PATH),
@@ -16,5 +16,3 @@ const tlsConfig = {
     return callback();
   },
 };
-
-module.exports = {tlsConfig};

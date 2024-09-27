@@ -1,16 +1,15 @@
 import tls from 'tls';
 import net from 'net';
-import {fetchMX, fetchTLSA} from './dnsService.mjs';
+import {fetchMX, fetchTLSA} from './dnsService.js';
 import Module from 'node:module';
-
-const {tlsOptions} = require('../config/outgoingTLS.js');
+import {tlsOptions} from '../config/outgoingTLS.js';
 
 const types = [undefined, 'sha256', 'sha512'];
 
 export async function processEmail(email, rcpt) {
   const domain = rcpt.split('@')[1];
-  // const hosts = await fetchMX(domain);
-  const hosts = ['172.18.0.5']; //TODO: Remove from prod
+  const hosts = await fetchMX(domain);
+  // const hosts = ['172.18.0.5']; //TODO: Remove from prod
   // Try each provided MX address
   for (let host of hosts) {
 

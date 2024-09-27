@@ -1,6 +1,6 @@
-const openpgp = require('openpgp');
+import openpgp from 'openpgp';
 
-class PGP {
+export class Pgp {
   async find(address) {
     const res = await fetch(
         `https://keys.openpgp.org/vks/v1/by-email/${encodeURIComponent(
@@ -35,4 +35,4 @@ class PGP {
   }
 }
 
-module.exports = new PGP();
+export default new Pgp();

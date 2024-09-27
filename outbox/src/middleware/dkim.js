@@ -1,7 +1,9 @@
-const {dkimSign} = require('mailauth/lib/dkim/sign');
-const fs = require('fs').promises;
+import Module from 'node:module';
+import fs from 'fs/promises';
 
-class DKIMMiddleware {
+const require = Module.createRequire(import.meta.url);
+
+export default class DKIMMiddleware {
   constructor(options) {
     this.domainName = options.domainName;  // The domain for which DKIM is being applied
     this.selector = options.selector;  // The DKIM selector (e.g., 'default' or 'dkim')
@@ -49,6 +51,8 @@ class DKIMMiddleware {
           }],
       };
 
+      const {dkimSign} = require('mailauth/lib/dkim/sign');
+
       // Sign the email using mailauth's dkimSign
       const signResult = await dkimSign(fullEmail, dkimOptions);
 
@@ -65,5 +69,3 @@ class DKIMMiddleware {
     }
   }
 }
-
-module.exports = DKIMMiddleware;
