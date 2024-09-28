@@ -1,10 +1,12 @@
 export class Spamhaus {
   constructor() {
     this.enabled = !!process.env.SPAMHAUS_API_KEY;
+    this.cache = {};
   }
 
- async lookupIP(address) {
+  async lookupIP(address) {
     if (!this.enabled) return false;
+    if (this.cache[address]) return this.cache[address];
 
     const res = await fetch(
         `https://apibl.spamhaus.net/lookup/v1/ZEN/${address}`,
@@ -14,7 +16,9 @@ export class Spamhaus {
             'Authorization': `Bearer ${process.env.SPAMHAUS_API_KEY}`,
           },
         });
-    return res.status === 200;
+    const status = res.status === 200;
+    this.cache[address] = status;
+    return status;
   }
 }
 

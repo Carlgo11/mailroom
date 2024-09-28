@@ -1,4 +1,4 @@
-export async function checkForSpam(email) {
+export default async function checkForSpam(email) {
   try {
     const emailContent = `${email.serializeHeaders()}\r\n\r\n${email.body}`;
     const res = await fetch(`${process.env.RSPAMD_URL || 'http://rspamd:11334'}/checkv2`, {

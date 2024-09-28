@@ -1,7 +1,7 @@
 import {Validate} from '../validators/mailAuth.js';
 import Log from './logService.js';
 
-export async function authenticateMessage(message, session) {
+export default async function authenticateMessage(message, session) {
   const error = new Error();
   error.responseCode = 550;
 
@@ -38,5 +38,3 @@ export async function authenticateMessage(message, session) {
     throw error;
   }
 }
-
-export default authenticateMessage;

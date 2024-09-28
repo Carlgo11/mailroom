@@ -1,7 +1,7 @@
 import Log from './logService.js';
 import {checkForSpam} from '../validators/rspamd.js';
 
-export async function processRspamd(email) {
+export default async function processRspamd(email) {
   const rspamd = await checkForSpam(email);
   email.addHeader('X-Spam-Score', rspamd['score']);
 
@@ -41,6 +41,3 @@ export async function processRspamd(email) {
     });
   }
 }
-
-export default processRspamd;
-

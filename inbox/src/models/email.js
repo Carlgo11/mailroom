@@ -1,14 +1,11 @@
 import * as crypto from 'node:crypto';
 import Module from 'node:module';
 
-const require = Module.createRequire(import.meta.url);
-
 export default class Email {
   constructor({
                 id = this.generateID(),
                 from = '',
                 to = [],
-                raw = '',
                 date = new Date().toISOString(),
                 subject = '',
               } = {}) {
@@ -16,55 +13,112 @@ export default class Email {
     this.from = from;
     this.to = to;
     this.headers = {};
-    this.raw = raw;
     this.date = date;
     this.subject = subject;
+    this.body = '';
   }
 
-  async parseStream(stream) {
-    const {simpleParser} = require('mailparser');
-
+  /**
+   * Parse message stream and populate object values
+   *
+   * @param stream Raw message data stream
+   * @returns {Promise<void>} Resolves if successful, otherwise rejects.
+   */
+  parseStream(stream) {
     let data = '';
+    let headersParsed = false;
 
-    stream.on('data', (chunk) => data += chunk.toString());
+    stream.setEncoding('utf8');
 
-    return new Promise(async (resolve, reject) => {
-      stream.on('end', async () => {
-        this.raw = data;
+    return new Promise((resolve, reject) => {
+
+      // Data chunk received
+      stream.on('data', (chunk) => {
+        // If headers haven't been parsed, accumulate data and check for boundary
+        if (!headersParsed) {
+          data += chunk;
+          const headerBoundaryIndex = data.indexOf('\r\n\r\n');
+
+          if (headerBoundaryIndex !== -1) {
+            const headers = data.slice(0, headerBoundaryIndex);
+            this.parseHeaders(headers).then(() => {
+
+            });
+            // Initialize body and mark headers as parsed
+            this.body = data.slice(headerBoundaryIndex + 4); // Skip the boundary
+            headersParsed = true;
+          }
+        } else {
+          // Append remaining data directly to body
+          this.body += chunk;
+        }
+      });
+
+      // End of message received
+      stream.once('end', async () => {
+        const require = Module.createRequire(import.meta.url);
+        const {simpleParser} = require('mailparser');
+
+        if (this.body === '')
+          reject(new Error('No message body'));
 
         try {
-          const [headers, body] = data.split('\r\n\r\n');
-
-          if (headers) {
-            this.body = body;
-            this.parseHeaders(headers);
-            this.subject = (await simpleParser(body)).subject || '';
-          } else {
-            // If no proper header end found, treat the entire email as body
-            this.body = data;
-          }
-
+          // Parse the full body for subject and other data
+          const parsedEmail = await simpleParser(this.body);
+          this.subject = parsedEmail.subject || this.headers.subject;
           resolve();
         } catch (err) {
           reject(new Error(`Error parsing email data: ${err.message}`));
         }
       });
 
-      stream.on('error', (err) => reject(
-          new Error(`Error processing incoming email: ${err.message}`),
-      ));
+      // Handle stream errors
+      stream.once('error', (err) =>
+          reject(new Error(`Error processing incoming email: ${err.message}`)),
+      );
     });
   }
 
-  parseHeaders(headers) {
-    headers.split('\r\n').map(async (header) => {
-      const key = header.split(':')[0];
-      const value = header.replace(`${key}: `, '');
-      if (Object.keys(this.headers).includes(key))
-        this.headers[key] = [this.headers[key], value];
-      else
+  /**
+   * Parse header string into object
+   *
+   * @param headers
+   * @returns {Promise<void>}
+   */
+  async parseHeaders(headers) {
+    // Unfold headers: replace any CRLF followed by whitespace with a single space
+    const unfoldedHeaders = headers.replace(/\r\n[ \t]+/g, ' ').split('\r\n');
+
+    // Split headers into individual lines
+    await Promise.all(unfoldedHeaders.map((headerLine) => {
+
+      // Skip empty lines (in case of extra CRLFs)
+      if (!headerLine.trim()) return;
+
+      // Find the first colon, which separates the header name and value
+      const index = headerLine.indexOf(':');
+      if (index === -1) {
+        // Invalid header line (no colon found), skip or handle error
+        console.warn(`Invalid header line: ${headerLine}`);
+        return;
+      }
+
+      // Extract header name and value
+      const key = headerLine.slice(0, index).trim().toLowerCase(); // Normalize to lowercase
+      const value = headerLine.slice(index + 1).trim();
+
+      // Initialize the header key in the headers object if it doesn't exist
+      if (!this.headers[key]) {
         this.headers[key] = value;
-    });
+      } else {
+        // If the header key already exists, convert it to an array or append to the array
+        if (Array.isArray(this.headers[key])) {
+          this.headers[key].push(value);
+        } else {
+          this.headers[key] = [this.headers[key], value];
+        }
+      }
+    }));
   }
 
   parseSession(session) {
@@ -78,17 +132,14 @@ export default class Email {
   }
 
   addHeader(name, value) {
-    return this.headers[name] = value;
+    return this.headers[name.toLowerCase()] = value;
   }
 
-  async getHeader(name) {
-    return Object.keys(this.headers).map(async (header) => {
-      if (header.toLowerCase() === name.toLowerCase())
-        return this.headers.header;
-    });
+  getHeader(name) {
+    return this.headers[name.toLowerCase()];
   }
 
-  async removeHeader(name) {
+  removeHeader(name) {
     return Object.keys(this.headers).map(async (header) => {
       if (header.toLowerCase() === name.toLowerCase())
         delete this.headers.header;

@@ -1,5 +1,4 @@
 import fs from 'fs';
-import 'dotenv/config'
 
 export const tlsConfig = {
   key: fs.readFileSync(process.env.INBOX_TLS_KEY_PATH || process.env.TLS_KEY_PATH),
