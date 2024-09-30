@@ -1,0 +1,20 @@
+{
+  "name": "mailroom-cli",
+  "version": "0.0.1",
+  "main": "",
+  "scripts": {
+    "build": "make",
+    "dev": "node ./index.js"
+  },
+  "bin": {
+    "mailroom-cli": "./dist/mailroom-cli.js"
+  },
+  "author": "carlgo11",
+  "repository": "https://github.com/Carlgo11/mailroom",
+  "license": "LGPL-3.0-or-later",
+  "description": "CLI tool for managing users and certificates for Mail Room",
+  "devDependencies": {
+    "commander": "^12.1.0",
+    "esbuild": "^0.24.0"
+  }
+}

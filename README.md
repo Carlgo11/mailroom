@@ -56,6 +56,10 @@ To run the project you need a server with Docker and the following ports open:
    ```shell
    docker compose up -d
    ```
+7. Download the CLI tool
+   ```shell
+   npm install -g mailroom-cli
+   ```
 
 ## Usage
 
@@ -65,10 +69,10 @@ Start the services using Docker Compose:
   docker compose up -d
   ```
 
-### Managing users
-To add or remove a user, use the mailadmin tool:
+### Managing users and certificates
+To add or remove a user, use the mailroom cli tool:
    ```text
-   Usage: ./mailadmin [command] [options]
+   Usage: ./mailroom-cli [command] [options]
    
    Commands:
      create-user <email> <password>   Create a new email user

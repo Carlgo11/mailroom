@@ -1,5 +1,5 @@
 {
-  "main": "dist/mailadmin.js",
+  "main": "dist/mailroom-cli.js",
   "output": "/tmp/sea-prep.blob",
   "disableExperimentalSEAWarning": true
 }

@@ -20,3 +20,6 @@ mkdir certs/{clients,dkim,dovecot,inbox,outbox} -p
 
 # Set up configuration file
 mv .env.example .env
+
+# Install CLI tool
+npm i -g mailroom-cli

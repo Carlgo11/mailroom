@@ -1,14 +1,16 @@
 services:
   inbox:
     container_name: inbox
-    image: carlgo11/mailroom-inbox
+    build: inbox
     ports:
       - "25:25"
     volumes:
       - ./certs/inbox:/certs/inbox:ro
+      - vhosts:/var/mail/vhosts/
       - ./certs/clients/users:/certs/clients/users:ro
-      - vhosts:/var/mail/vhosts
-    env_file: .env
+      - ./inbox/src:/usr/src/inbox/src
+      - ./inbox/test:/usr/src/inbox/test
+    env_file: ".env"
     depends_on:
       - redis
     networks:
@@ -19,15 +21,17 @@ services:
 
   outbox:
     container_name: outbox
-    image: carlgo11/mailroom-outbox
+    build: outbox
     ports:
       - "465:465"
     volumes:
       - ./certs/outbox:/certs/outbox:ro
-      - ./certs/clients:/certs/clients:ro
+      - ./certs/clients:/certs/clients
       - ./certs/dkim:/certs/dkim:ro
-      - vhosts:/var/mail/vhosts
-    env_file: .env
+      - vhosts:/var/mail/vhosts/
+      - ./outbox/src/:/usr/src/outbox/src
+      - ./outbox/test/:/usr/src/outbox/test
+    env_file: ".env"
     depends_on:
       - redis
     networks:
@@ -39,6 +43,8 @@ services:
   redis:
     container_name: redis_mail
     image: redis:alpine
+    ports:
+      - "6379:6379/tcp"
     volumes:
       - redis_data:/data
     networks:
@@ -51,10 +57,10 @@ services:
     ports:
       - "993:993"
     volumes:
-      - ./conf/dovecot:/etc/dovecot/conf.d:ro
+      - ./conf/dovecot:/etc/dovecot/conf.d
+      - vhosts:/var/mail/vhosts/
       - ./certs/dovecot:/certs/dovecot:ro
       - ./certs/clients:/certs/clients:ro
-      - vhosts:/var/mail/vhosts
     env_file: .env
     depends_on:
       - redis
@@ -68,7 +74,7 @@ services:
 
   rspamd:
     container_name: rspamd
-    image: carlgo11/mailroom-rspamd
+    build: rspamd
     ports:
       - "11334:11334"
     volumes:
@@ -84,9 +90,9 @@ services:
 
   controller:
     container_name: controller
-    build: ./controller
+    build: controller
     ports:
-      - "127.0.0.1:6804:6804/tcp"
+      - "6804:6804"
     volumes:
       - ./certs:/certs
     env_file: .env
@@ -103,5 +109,6 @@ networks:
   postnet:
     driver: bridge
     ipam:
+      driver: default
       config:
         - subnet: 172.18.0.0/24

@@ -1,7 +1,7 @@
 # Define variables
 OUTDIR := dist
-ENTRY := mailadmin.js
-BUNDLE := $(OUTDIR)/mailadmin.js
+ENTRY := index.js
+BUNDLE := $(OUTDIR)/mailroom-cli.js
 NODE := $(shell command -v node)
 SEA_CONFIG := sea-config.json
 SEA_BLOB := /tmp/sea-prep.blob
@@ -20,8 +20,8 @@ $(BUNDLE): $(ENTRY)
 
 # Copy Node executable to dist
 copy-node: $(OUTDIR)
-	cp "$(NODE)" $(OUTDIR)/mailadmin
-	node -e "require('fs').copyFileSync(process.execPath, '$(OUTDIR)/mailadmin.exe')"
+	cp "$(NODE)" $(OUTDIR)/mailroom-cli
+	node -e "require('fs').copyFileSync(process.execPath, '$(OUTDIR)/mailroom-cli.exe')"
 
 # Prepare the SEA blob
 sea: $(SEA_CONFIG)
@@ -29,8 +29,8 @@ sea: $(SEA_CONFIG)
 
 # Inject the SEA blob into executables
 postject: $(SEA_BLOB)
-	npx postject $(OUTDIR)/mailadmin NODE_SEA_BLOB $(SEA_BLOB) --sentinel-fuse $(SENTINEL) &
-	npx postject $(OUTDIR)/mailadmin.exe NODE_SEA_BLOB $(SEA_BLOB) --sentinel-fuse $(SENTINEL) &
+	npx postject $(OUTDIR)/mailroom-cli NODE_SEA_BLOB $(SEA_BLOB) --sentinel-fuse $(SENTINEL) &
+	npx postject $(OUTDIR)/mailroom-cli.exe NODE_SEA_BLOB $(SEA_BLOB) --sentinel-fuse $(SENTINEL) &
 	wait
 
 # Clean the output directory
