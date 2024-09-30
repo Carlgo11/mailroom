@@ -21,7 +21,7 @@ export class EmailService {
 
     await Promise.all([
       // Validate the email with SPF, DKIM, ARC, DMARC
-      authenticateMessage(email.raw, session),
+      authenticateMessage(stream, session),
       // Check for spam using Rspamd
       processRspamd(email, session),
     ]);
@@ -33,8 +33,7 @@ export class EmailService {
           rcpt = await userExists(rcpt);
 
           try {
-            let newEmail = JSON.parse(JSON.stringify(email));
-            newEmail = await encryptEmail(rcpt, newEmail);
+            const newEmail = await encryptEmail(rcpt, new Email(email));
             newEmail.headers['Delivered-To'] = rcpt;
 
             // Save S/MIME encrypted email
