@@ -1,90 +1,63 @@
-import {exec} from 'child_process';
 import fs from 'fs/promises';
 import path from 'path';
+import {execFile} from 'child_process';
+import {promisify} from 'util';
 
- export async function encryptEmail(rcpt, email) {
-    const rcptCert = path.join(process.env.CLIENT_CERT_PATH, `${rcpt}.pem`);
-    const mailPath = path.join('/tmp', `encrypted-${Date.now()}.eml`);
-    const tempInputPath = path.join('/tmp', `input-${Date.now()}.eml`);
+const execFileAsync = promisify(execFile);
 
-    // Check if the recipient's certificate exists
-    try {
-      await fs.access(rcptCert);
-    } catch (err) {
-      throw new Error(`No certificate found for ${rcpt}`);
-    }
+export async function encryptEmail(rcpt, email) {
+  const rcptCertPath = path.join(process.env.CLIENT_CERT_PATH, `${rcpt}.pem`);
 
-    // Serialize headers
-    const headersString = serializeHeaders(email.headers);
-    const fullEmail = `${headersString}\r\n\r\n${email.body}`;
-
-    try {
-      // Write the email body to a temporary input file
-      await fs.writeFile(tempInputPath, fullEmail);
-
-      // Construct the OpenSSL command
-      const opensslCmd = `openssl smime -encrypt -aes256 -in ${tempInputPath} -out ${mailPath} -outform PEM ${rcptCert}`;
-
-      // Encrypt the email using OpenSSL
-      const encryptedEmail = await new Promise((resolve, reject) => {
-        exec(opensslCmd, async (error, stdout, stderr) => {
-          if (error) {
-            // Clean up the temporary input file in case of error
-            await fs.unlink(tempInputPath).catch(() => {
-            });
-            return reject(new Error(`Encryption failed: ${stderr}`));
-          }
-
-          try {
-            let encryptedEmail = await fs.readFile(mailPath, 'utf8');
-            await fs.unlink(mailPath); // Clean up the temporary output file
-            await fs.unlink(tempInputPath); // Clean up the temporary input file
-
-            // Remove the first and last lines (BEGIN and END markers)
-            const lines = encryptedEmail.split('\n');
-            encryptedEmail = lines.slice(1, -2).join('\n');
-            encryptedEmail += '\n';
-
-            resolve(encryptedEmail);
-          } catch (err) {
-            await fs.unlink(tempInputPath).catch(() => {
-            });
-            await fs.unlink(mailPath).catch(() => {
-            });
-            reject(err);
-          }
-        });
-      });
-
-      // Set the S/MIME Content-Type and related headers
-      email.headers['Content-Type'] = 'application/pkcs7-mime; name="smime.p7m"; smime-type=enveloped-data';
-      email.headers['Content-Disposition'] = 'attachment; filename="smime.p7m"';
-      email.headers['Content-Transfer-Encoding'] = 'base64';
-
-      // Update the email body with the encrypted content
-      email.body = encryptedEmail;
-
-      return email;
-    } catch (err) {
-      throw new Error(`Failed to encrypt email: ${err.message}`);
-    }
+  // Check if the recipient's certificate exists
+  try {
+    await fs.access(rcptCertPath);
+  } catch (err) {
+    throw new Error(`No certificate found for ${rcpt}`);
   }
 
-  // Method to serialize headers
-  function serializeHeaders(headers) {
-    return Object.entries(headers).map(([key, value]) => {
-      // Check if value is an object with value and params
-      if (value && typeof value === 'object' && value.value) {
-        let headerValue = value.value;
-        if (value.params) {
-          const paramsString = Object.entries(value.params).
-              map(([paramKey, paramValue]) => `${paramKey}=${paramValue}`).
-              join('; ');
-          headerValue += `; ${paramsString}`;
-        }
-        return `${key}: ${headerValue}`;
-      }
-      // Otherwise, treat it as a simple string
-      return `${key}: ${value}`;
-    }).join('\r\n');
+  const tempInputPath = path.join('/tmp', `input-${Date.now()}.eml`);
+  const tempOutputPath = path.join('/tmp', `encrypted-${Date.now()}.pem`);
+
+  try {
+    // Write the email body to a temporary input file
+    await fs.writeFile(tempInputPath, email.full_email());
+
+    // Construct the OpenSSL command
+    const opensslArgs = [
+      'smime', '-encrypt',
+      '-aes256', // Encryption algorithm
+      '-in', tempInputPath, // Input file
+      '-out', tempOutputPath, // Output file
+      '-outform', 'DER', // Output format for easier debugging
+      rcptCertPath, // Recipient's certificate
+    ];
+
+    // Execute the OpenSSL command
+    await execFileAsync('openssl', opensslArgs);
+
+    // Read the encrypted content from the output file
+    let encryptedEmail = await fs.readFile(tempOutputPath);
+
+    // Clean up temporary files
+    await Promise.all([
+      fs.unlink(tempInputPath),
+      fs.unlink(tempOutputPath),
+    ]);
+
+    // Set the S/MIME Content-Type and related headers
+    email.headers['content-type'] = 'application/pkcs7-mime; name="smime.p7m"; smime-type=enveloped-data';
+    email.headers['content-disposition'] = 'attachment; filename="smime.p7m"';
+    email.headers['content-transfer-encoding'] = 'base64';
+
+    // Update the email body with the encrypted content
+    email.body = encryptedEmail.toString('base64');
+
+    return email;
+  } catch (err) {
+    // Clean up temporary files if an error occurs
+    await fs.unlink(tempInputPath).catch(() => {});
+    await fs.unlink(tempOutputPath).catch(() => {});
+
+    throw new Error(`Failed to encrypt email: ${err.message}`);
   }
+}

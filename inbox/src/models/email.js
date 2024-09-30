@@ -7,15 +7,17 @@ export default class Email {
                 from = '',
                 to = [],
                 date = new Date().toISOString(),
+      headers = {},
                 subject = '',
+      body = ''
               } = {}) {
     this.id = id;
     this.from = from;
     this.to = to;
-    this.headers = {};
+    this.headers = headers;
     this.date = date;
     this.subject = subject;
-    this.body = '';
+    this.body = body;
   }
 
   /**
@@ -132,7 +134,16 @@ export default class Email {
   }
 
   addHeader(name, value) {
-    return this.headers[name.toLowerCase()] = value;
+    const key = name.toLowerCase();
+    if (this.headers[key]) {
+      if (Array.isArray(this.headers[key])) {
+        this.headers[key].push(value);
+      } else {
+        this.headers[key] = [this.headers[key], value];
+      }
+    } else {
+      return this.headers[key] = value;
+    }
   }
 
   getHeader(name) {
@@ -163,5 +174,9 @@ export default class Email {
       // Otherwise, treat it as a simple string
       return `${key}: ${value}`;
     }).join('\r\n');
+  }
+
+  full_email = () => {
+    return `${this.serializeHeaders()}\r\n\r\n${this.body}`
   }
 }
