@@ -92,39 +92,39 @@ export function handleConnect({remoteAddress, id, clientHostname}, callback) {
  *
  * @param {string} remoteAddress - The IP address of the connecting client.
  * @param {string} id - The session ID for logging.
- * @returns {Promise<boolean>} Resolves to true if validation passes, otherwise throws an error.
+ * @returns {Promise<Awaited<void>[]>} Returns the validation promise of void.
  * @throws {Error} Throws an error if the IP address is blacklisted or has a high fraud score.
  */
 async function validateConnection(remoteAddress, id) {
-  const ipqsScoreLimit = parseInt(process.env.IPQS_SCORE_LIMIT, 10) || 50;
+  const ipqsScoreLimit = parseInt(process.env.IPQS_SCORE_LIMIT, 10) || 90;
+  const err = new Error();
+  err.responseCode = 554;
 
-  const [spamhausListed, ipqsScore, ipscore] = await Promise.all([
-    Spamhaus.lookupIP(remoteAddress),
-    ipQS.lookupIP(remoteAddress),
-    ipScore.lookupIP(remoteAddress),
+  return Promise.all([
+    Spamhaus.lookupIP(remoteAddress).then((listed) => {
+      if (listed) {
+        Log.info(`${remoteAddress} blacklisted by Spamhaus`, id);
+        err.message = '5.7.1 IP blacklisted by Spamhaus';
+        throw err;
+      }
+    }),
+
+    ipQS.lookupIP(remoteAddress).then((score) => {
+      if (score > ipqsScoreLimit) {
+        Log.info(`${remoteAddress} has high IPQS score: ${score}`, id);
+        err.message = '5.7.1 IP reported as malicious by IPQS';
+        throw err;
+      }
+    }),
+
+    ipScore.lookupIP(remoteAddress).then((list) => {
+      if (list !== null) {
+        Log.info(`${remoteAddress} blacklisted by ${list}`, id);
+        err.message = `5.7.1 IP blacklisted by ${list}`;
+        throw err;
+      }
+    }),
   ]);
-
-  if (spamhausListed) {
-    Log.info(`${remoteAddress} blacklisted by Spamhaus`, id);
-    const err = new Error('5.7.1 IP blacklisted by Spamhaus');
-    err.responseCode = 554;
-    throw err;
-  }
-
-  if (ipqsScore > ipqsScoreLimit) {
-    Log.info(`${remoteAddress} has high IPQS score: ${ipqsScore}`, id);
-    const err = new Error('5.7.1 IP reported as malicious by IPQS');
-    err.responseCode = 554;
-    throw err;
-  }
-
-  if(ipscore instanceof Error){
-    Log.info(ipscore.message,id)
-    ipscore.responseCode = 554;
-    throw ipscore;
-  }
-
-  return true;
 }
 
 /**

@@ -21,7 +21,7 @@ export class ipScoreValidator {
       const {blacklists} = await res.json();
       for (const list of Object.keys(blacklists)) {
         if (blacklists[list] === 'listed')
-          return new Error(`${address} reported suspicious by ${list}.`);
+          return list
       }
     }
     return null;
