@@ -134,7 +134,8 @@ async function validateConnection(remoteAddress, id) {
  * @returns {void}
  */
 export function handleClose(session) {
-  Log.info(`${session.remoteAddress} disconnected.`, session.id);
+  if (session.remoteAddress)
+    Log.info(`${session.remoteAddress} disconnected.`, session.id);
 }
 
 /**
