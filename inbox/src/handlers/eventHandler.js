@@ -118,6 +118,12 @@ async function validateConnection(remoteAddress, id) {
     throw err;
   }
 
+  if(ipscore instanceof Error){
+    Log.info(ipscore.message,id)
+    ipscore.responseCode = 554;
+    throw ipscore;
+  }
+
   return true;
 }
 
