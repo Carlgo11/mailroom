@@ -10,7 +10,7 @@ export async function checkForSpam(email) {
         'From': email.from,
         'Rcpt': email.to.join(', '),
         'Queue-Id': email.id,
-        'Helo': email.hostNameAppearsAs,
+        'Helo': email.ehlo,
         'IP': email.remoteAddress,
         'Hostname': email.clientHostname,
       },

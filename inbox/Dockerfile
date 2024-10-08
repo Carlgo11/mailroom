@@ -1,5 +1,10 @@
-FROM node:alpine
-WORKDIR /usr/src/inbox
+FROM node:20 AS build
+COPY . /app
+WORKDIR /app
+
+RUN npm i --omit=dev
+
+FROM gcr.io/distroless/nodejs20-debian12
 
 ENV INBOX_PORT="25"
 ENV INBOX_HOST="smtp.example.com"
@@ -10,10 +15,8 @@ ENV INBOX_TLS_CERT_PATH="/certs/inbox/cert.pem"
 ENV REDIS_HOST="redis_mail"
 ENV REDIS_PORT="6379"
 
-COPY package.json ./
+WORKDIR /usr/src/inbox
 
-RUN npm install --production; apk add openssl
+COPY --from=build /app /usr/src/inbox
 
-COPY . .
-
-CMD ["node", "src/index.js"]
+CMD ["src/index.js"]

@@ -68,7 +68,7 @@ describe('Email.parseStream', () => {
     const stream = createStreamFromString(rawEmail);
 
     // console.log('stream',stream);
-    await email.parseStream(stream);
+    await email.parseMessage(stream);
 
     assert.strictEqual(email.headers.subject, 'Test Email');
     assert.strictEqual(email.headers.from, 'sender@example.com');
@@ -83,7 +83,7 @@ describe('Email.parseStream', () => {
 
     const stream = createStreamFromString(rawEmail);
 
-    await email.parseStream(stream);
+    await email.parseMessage(stream);
 
     assert.strictEqual(email.headers.subject, 'Large Email');
     assert.strictEqual(email.headers.from, 'sender@example.com');
@@ -97,7 +97,7 @@ describe('Email.parseStream', () => {
 
         const stream = createStreamFromString(rawEmail);
 
-        await email.parseStream(stream);
+        await email.parseMessage(stream);
 
         assert.strictEqual(email.subject, 'Test Email Subject');
       });
@@ -111,7 +111,7 @@ describe('Email.parseStream', () => {
     });
 
     try {
-      await email.parseStream(stream);
+      await email.parseMessage(stream);
       assert.fail('parseStream did not reject as expected');
     } catch (err) {
       assert.strictEqual(err.message,
@@ -125,7 +125,7 @@ describe('Email.parseStream', () => {
 
     const stream = createStreamFromString(rawEmail);
 
-    await email.parseStream(stream);
+    await email.parseMessage(stream);
 
     assert.strictEqual(email.headers.subject, 'Folded header');
     assert.strictEqual(email.headers.from, 'sender@example.com');

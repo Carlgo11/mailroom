@@ -5,23 +5,16 @@ export default async function processRspamd(email) {
   const rspamd = await checkForSpam(email);
   email.addHeader('X-Spam-Score', rspamd['score']);
 
-  const error = new Error();
   switch (rspamd.action) {
     case 'reject':
-      error.responseCode = 550;
-      error.message = '5.7.1 Message rejected as spam';
       Log.info('Message rejected as spam', email.id);
-      throw error;
+      throw new Response('Message rejected as spam', 550, [5,7,1]);
     case 'greylist':
-      error.responseCode = 451;
-      error.message = '4.7.1 Greylisting in effect, please try again later';
       Log.info('Message greylisted', email.id);
-      throw error;
+      throw new Response('Greylisting in effect, please try again later', 451, [4,7,1])
     case 'soft reject':
-      error.responseCode = 450;
-      error.message = '4.7.1 Soft reject, please try again later';
       Log.info('Message soft rejected', email.id);
-      throw error;
+      throw new Response('Soft reject, please try again later', 450, [4,7,1]);
     case 'add header':
       email.addHeader('X-Spam-Status', 'Yes');
       email.addHeader('X-Spam-Flag', 'YES');

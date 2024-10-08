@@ -1,19 +1,16 @@
 import fs from 'fs';
-import {createRequire} from 'module';
+import {Listen, startSMTPServer} from '@carlgo11/smtp-server';
 import Log from '../services/logService.js';
-import {tlsConfig} from '../config/tls.js';
+import {tlsConfig as tlsOptions} from '../config/tls.js';
 import {
   handleClose,
   handleConnect,
   handleData,
-  handleMailFrom,
   handleRcptTo,
   handleSecure,
 } from '../handlers/eventHandler.js';
 
 // Use createRequire to import CommonJS modules in ESM
-const require = createRequire(import.meta.url);
-const {SMTPServer} = require('smtp-server');
 
 const pidFile = '/var/tmp/inbox.pid';
 let server;
@@ -24,22 +21,11 @@ export function startServer() {
 
   try {
     // Create SMTP server instance
-    server = new SMTPServer({
-      ...tlsConfig,
-      onConnect: (session, callback) => handleConnect(session, callback),
-      onMailFrom: (address, session, callback) => handleMailFrom(address,
-          session, callback),
-      onRcptTo: (address, session, callback) => {
-        handleRcptTo(address, session, callback).catch(callback);
-      },
-      onData: (stream, session, callback) => {
-        handleData(stream, session, callback).catch(callback);
-      },
-      onClose: handleClose,
-      onSecure: (socket, session, callback) => handleSecure(socket, session,
-          callback),
+    server = new startSMTPServer({
+    tlsOptions,
+      onRCPTTO: async (address, session) => await handleRcptTo(address, session),
+      onDATA: async (message, session) => await handleData(message, session),
       disabledCommands: ['AUTH', 'HELP'],
-      logger: process.env.NODE_ENV === 'development',
     });
   } catch (e) {
     console.error(e);
@@ -47,11 +33,18 @@ export function startServer() {
     process.exit(1);
   }
 
+  Listen.on('CONNECT', async (session) => {
+    handleConnect(session).catch(e => {
+      session.send(e);
+      session.socket.end()
+    })
+  });
+
   // Attach error handler
   server.on('error', handleError);
 
   // Start listening
-  server.listen(process.env.INBOX_PORT, () => {
+  server.listen(process.env.INBOX_PORT, '0.0.0.0',() => {
     Log.info(`Inbox server listening on port ${process.env.INBOX_PORT}`);
   });
 }

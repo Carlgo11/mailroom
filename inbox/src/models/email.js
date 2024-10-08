@@ -7,13 +7,15 @@ export default class Email {
                 from = '',
                 to = [],
                 date = new Date().toISOString(),
-      headers = {},
+                headers = {},
                 subject = '',
-      body = ''
+                body = '',
+                ehlo = '',
               } = {}) {
     this.id = id;
     this.from = from;
     this.to = to;
+    this.ehlo = ehlo;
     this.headers = headers;
     this.date = date;
     this.subject = subject;
@@ -23,69 +25,51 @@ export default class Email {
   /**
    * Parse message stream and populate object values
    *
-   * @param stream Raw message data stream
-   * @returns {Promise<void>} Resolves if successful, otherwise rejects.
+   * @param {String} message - Raw message
+   * @returns {Promise<Awaited<boolean>[]>} - Resolves if successful, otherwise rejects.
+   * @throws Error - Throws error(s) if message parsing failed.
    */
-  parseStream(stream) {
-    let data = '';
-    let headersParsed = false;
+  async parseMessage(message) {
+    const headerBoundary = message.indexOf('\r\n\r\n');
 
-    stream.setEncoding('utf8');
-
-    return new Promise((resolve, reject) => {
-
-      // Data chunk received
-      stream.on('data', (chunk) => {
-        // If headers haven't been parsed, accumulate data and check for boundary
-        if (!headersParsed) {
-          data += chunk;
-          const headerBoundaryIndex = data.indexOf('\r\n\r\n');
-
-          if (headerBoundaryIndex !== -1) {
-            const headers = data.slice(0, headerBoundaryIndex);
-            this.parseHeaders(headers).then(() => {
-
-            });
-            // Initialize body and mark headers as parsed
-            this.body = data.slice(headerBoundaryIndex + 4); // Skip the boundary
-            headersParsed = true;
-          }
-        } else {
-          // Append remaining data directly to body
-          this.body += chunk;
-        }
-      });
-
-      // End of message received
-      stream.once('end', async () => {
-        const require = Module.createRequire(import.meta.url);
-        const {simpleParser} = require('mailparser');
-
-        if (this.body === '')
-          reject(new Error('No message body'));
-
-        try {
-          // Parse the full body for subject and other data
-          const parsedEmail = await simpleParser(this.body);
-          this.subject = parsedEmail.subject || this.headers.subject;
-          resolve();
-        } catch (err) {
-          reject(new Error(`Error parsing email data: ${err.message}`));
-        }
-      });
-
-      // Handle stream errors
-      stream.once('error', (err) =>
-          reject(new Error(`Error processing incoming email: ${err.message}`)),
-      );
-    });
+    // Wait for header and body parsing to complete
+    return Promise.all([
+      this.parseHeaders(message.slice(0, headerBoundary)),
+      this.parseBody(message.slice(headerBoundary + 4)),
+    ]);
   }
 
   /**
-   * Parse header string into object
+   * Parse body from raw message
    *
-   * @param headers
-   * @returns {Promise<void>}
+   * @param {String} body Message part which is the email "body".
+   * @returns {Promise<true>} - Returns true if parsing succeeded.
+   * @throws Error - Throws error if parsing failed.
+   */
+  async parseBody(body){
+    // Initialize body and mark headers as parsed
+    this.body = body;
+
+    // End of message received
+    const require = Module.createRequire(import.meta.url);
+    const {simpleParser} = require('mailparser');
+
+    try {
+      // Parse the full body for subject and other data
+      const parsedEmail = await simpleParser(body);
+      this.subject = parsedEmail.subject || this.headers.subject;
+      return true;
+    } catch (err) {
+      throw new Error(`Error parsing email data: ${err.message}`);
+    }
+  }
+
+  /**
+   * Parse headers from raw message
+   *
+   * @param {String} headers - Message part that contains the email "headers".
+   * @returns {Promise<true>} - Returns true if parsing succeeded.
+   * @throws Error - Throws error is parsing failed.
    */
   async parseHeaders(headers) {
     // Unfold headers: replace any CRLF followed by whitespace with a single space
@@ -121,15 +105,16 @@ export default class Email {
         }
       }
     }));
+    return true;
   }
 
   parseSession(session) {
-    this.ip = session.remoteAddress;
-    this.from = session.envelope.mailFrom.address;
-    this.to = session.envelope.rcptTo.map(r => r.address);
-    this.hostNameAppearsAs = session.hostNameAppearsAs;
-    this.clientHostname = session.clientHostname;
-    this.remoteAddress = session.remoteAddress;
+    this.ip = session.clientIP;
+    this.from = session.mailFrom;
+    this.to = session.rcptTo;
+    this.clientHostname = session.rDNS;
+    this.remoteAddress = session.clientIP;
+    this.ehlo = session.ehlo;
     return true;
   }
 
@@ -177,6 +162,6 @@ export default class Email {
   }
 
   full_email = () => {
-    return `${this.serializeHeaders()}\r\n\r\n${this.body}`
-  }
+    return `${this.serializeHeaders()}\r\n\r\n${this.body}`;
+  };
 }

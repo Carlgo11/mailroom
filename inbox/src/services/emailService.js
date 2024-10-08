@@ -7,23 +7,23 @@ import {userExists} from './userService.js';
 import Log from './logService.js';
 
 export class EmailService {
-  async processIncomingEmail(stream, session) {
+  async processIncomingEmail(message, session) {
     const email = new Email({
       id: session.id,
-      from: session.envelope.mailFrom.address,
+      from: session.mailFrom,
     });
 
     // Parse email data
     await Promise.all([
-      email.parseStream(stream),
+      email.parseMessage(message),
       email.parseSession(session),
     ]);
 
     await Promise.all([
       // Validate the email with SPF, DKIM, ARC, DMARC
-      authenticateMessage(stream, session),
+      authenticateMessage(email, session.id),
       // Check for spam using Rspamd
-      processRspamd(email, session),
+      processRspamd(email),
     ]);
 
     // Save the email for each recipient
