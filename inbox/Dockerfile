@@ -4,7 +4,7 @@ WORKDIR /app
 
 RUN npm i --omit=dev
 
-FROM gcr.io/distroless/nodejs20-debian12
+FROM node:alpine
 
 ENV INBOX_PORT="25"
 ENV INBOX_HOST="smtp.example.com"
@@ -14,6 +14,8 @@ ENV INBOX_TLS_KEY_PATH="/certs/inbox/privkey.pem"
 ENV INBOX_TLS_CERT_PATH="/certs/inbox/cert.pem"
 ENV REDIS_HOST="redis_mail"
 ENV REDIS_PORT="6379"
+
+RUN apk add openssl
 
 WORKDIR /usr/src/inbox
 
