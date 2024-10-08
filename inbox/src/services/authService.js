@@ -1,5 +1,5 @@
 import {Validate} from '../validators/mailAuth.js';
-import Log from './logService.js';
+import {Log} from '@carlgo11/smtp-server';
 
 export default async function authenticateMessage(email, id) {
   const error = new Error();

@@ -1,6 +1,6 @@
 import {handleIncomingEmail} from '../controllers/emailController.js';
 import {userExists} from '../services/userService.js';
-import Log from '../services/logService.js';
+import {Log} from '@carlgo11/smtp-server';
 import Spamhaus from '../validators/spamhaus.js';
 import ipScore from '../validators/ipScore.js';
 import ipQS from '../validators/ipQS.js';
@@ -51,7 +51,6 @@ export async function handleData(stream, session) {
  * @throws {Error} Throws an error if the IP address is blacklisted or has a high fraud score.
  */
 export async function handleConnect({clientIP, id, rDNS}) {
-  Log.info(`${clientIP} connected>. <${rDNS}>`, id);
   const ipqsScoreLimit = parseInt(process.env.IPQS_SCORE_LIMIT, 10) || 90;
 
   return Promise.all([
@@ -76,17 +75,6 @@ export async function handleConnect({clientIP, id, rDNS}) {
       }
     }),
   ]);
-}
-
-/**
- * Handles the close of an SMTP session.
- *
- * @param {Object} session - The session object for the SMTP transaction.
- * @returns {void}
- */
-export function handleClose(session) {
-  if (session.remoteAddress)
-    Log.info(`${session.remoteAddress} disconnected.`, session.id);
 }
 
 /**

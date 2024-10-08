@@ -1,17 +1,13 @@
 import fs from 'fs';
-import {Listen, startSMTPServer} from '@carlgo11/smtp-server';
-import Log from '../services/logService.js';
+import {Listen, startSMTPServer, Log} from '@carlgo11/smtp-server';
 import {tlsConfig as tlsOptions} from '../config/tls.js';
 import {
-  handleClose,
   handleConnect,
   handleData,
   handleRcptTo,
-  handleSecure,
 } from '../handlers/eventHandler.js';
 
 // Use createRequire to import CommonJS modules in ESM
-
 const pidFile = '/var/tmp/inbox.pid';
 let server;
 
@@ -25,7 +21,7 @@ export function startServer() {
     tlsOptions,
       onRCPTTO: async (address, session) => await handleRcptTo(address, session),
       onDATA: async (message, session) => await handleData(message, session),
-      disabledCommands: ['AUTH', 'HELP'],
+      logLevel: 'DEBUG',
     });
   } catch (e) {
     console.error(e);
@@ -44,7 +40,7 @@ export function startServer() {
   server.on('error', handleError);
 
   // Start listening
-  server.listen(process.env.INBOX_PORT, '0.0.0.0',() => {
+  server.listen(process.env.INBOX_PORT, () => {
     Log.info(`Inbox server listening on port ${process.env.INBOX_PORT}`);
   });
 }

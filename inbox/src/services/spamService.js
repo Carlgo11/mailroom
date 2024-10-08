@@ -1,4 +1,4 @@
-import Log from './logService.js';
+import {Log} from '@carlgo11/smtp-server';
 import {checkForSpam} from '../validators/rspamd.js';
 
 export default async function processRspamd(email) {

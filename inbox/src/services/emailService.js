@@ -4,7 +4,7 @@ import processRspamd from './spamService.js';
 import saveEmail from './mailboxService.js';
 import {encryptEmail} from './smimeService.js';
 import {userExists} from './userService.js';
-import Log from './logService.js';
+import {Log} from '@carlgo11/smtp-server';
 
 export class EmailService {
   async processIncomingEmail(message, session) {
