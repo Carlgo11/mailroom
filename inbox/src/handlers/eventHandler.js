@@ -4,6 +4,7 @@ import {Log, Response} from '@carlgo11/smtp-server';
 import Spamhaus from '../validators/spamhaus.js';
 import ipScore from '../validators/ipScore.js';
 import ipQS from '../validators/ipQS.js';
+import {isIPv4, isIPv6} from 'net';
 
 /**
  * Handles the RCPT TO command during SMTP transaction.
@@ -56,6 +57,10 @@ export async function handleData(stream, session) {
 export async function handleConnect({clientIP, id, rDNS}) {
   const ipqsScoreLimit = parseInt(process.env.IPQS_SCORE_LIMIT, 10) || 90;
 
+  if (process.env.INBOX_AUTH.includes('rdns'))
+    if (rDNS === null)
+      throw new Response(`Reverse DNS validation failed`, 554, [5, 7, 25]);
+
   return Promise.all([
     Spamhaus.lookupIP(clientIP).then((listed) => {
       if (listed) {
@@ -98,4 +103,12 @@ export function handleSecure(socket, session, callback) {
 export async function handleEhlo(domain, session) {
   if (session.rDNS && domain !== session.rDNS)
     throw new Response(`Reverse DNS validation failed`, 550, [5, 7, 25]);
+
+  if (domain === process.env.INBOX_HOST)
+    session.socket.end();
+
+  if (isIPv4(domain) || isIPv6(domain) ||
+      (domain.startsWith('[') && domain.endsWith(']')))
+    throw new Response('IP literals not supported at this time', 501,
+        [5, 5, 2]);
 }
