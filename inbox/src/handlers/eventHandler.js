@@ -1,10 +1,9 @@
 import {handleIncomingEmail} from '../controllers/emailController.js';
 import {userExists} from '../services/userService.js';
-import {Log} from '@carlgo11/smtp-server';
+import {Log, Response} from '@carlgo11/smtp-server';
 import Spamhaus from '../validators/spamhaus.js';
 import ipScore from '../validators/ipScore.js';
 import ipQS from '../validators/ipQS.js';
-import {Response} from '@carlgo11/smtp-server';
 
 /**
  * Handles the RCPT TO command during SMTP transaction.
@@ -20,6 +19,10 @@ export async function handleRcptTo(address, {id}) {
     throw new Response(`Mailbox <${address}> not found`, 550, [5, 1, 1]);
   }
   return true;
+}
+
+export async function handleMailFrom(address, session) {
+
 }
 
 /**
@@ -90,4 +93,9 @@ export function handleSecure(socket, session, callback) {
   const cipherName = socket.getCipher().name;
   Log.info(`Connection upgraded to ${protocol} (${cipherName})`, session.id);
   return callback();
+}
+
+export async function handleEhlo(domain, session) {
+  if (session.rDNS && domain !== session.rDNS)
+    throw new Response(`Reverse DNS validation failed`, 550, [5, 7, 25]);
 }

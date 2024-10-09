@@ -10,20 +10,20 @@ export default async function authenticateMessage(email, id) {
   if (process.env.INBOX_AUTH.includes('spf') && spf.status.result !==
       'pass') {
     Log.info('SPF failed', id);
-    throw new Response('SPF check failed', 550, [5, 7, 1]);
+    throw new Response('SPF validation failed', 550, [5, 7, 23]);
   }
 
   if (process.env.INBOX_AUTH.includes('arc') && arc.status.result !==
       'pass') {
     Log.info('ARC check failed', id);
-    throw new Response('ARC check failed', 550, 5,7,1);
+    throw new Response('ARC validation failed', 550, 5,7,29);
   }
 
   if (process.env.INBOX_AUTH.includes('dkim')) {
     for (const {status} of dkim.results) {
       if (status.result !== 'pass') {
         Log.info('DKIM check failed', id);
-        throw new Response('DKIM check failed', 550, [5, 7, 1]);
+        throw new Response('No passing DKIM signature found', 550, [5, 7, 20]);
       }
     }
   }

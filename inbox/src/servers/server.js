@@ -3,7 +3,8 @@ import {Listen, startSMTPServer, Log} from '@carlgo11/smtp-server';
 import {tlsConfig as tlsOptions} from '../config/tls.js';
 import {
   handleConnect,
-  handleData,
+  handleData, handleEhlo,
+  handleMailFrom,
   handleRcptTo,
 } from '../handlers/eventHandler.js';
 
@@ -20,6 +21,8 @@ export function startServer() {
     server = new startSMTPServer({
     tlsOptions,
       onRCPTTO: async (address, session) => await handleRcptTo(address, session),
+      onMAILFROM: async (address, session) => await handleMailFrom(address, session),
+      onEHLO: async (domain, session) => await handleEhlo(domain, session),
       onDATA: async (message, session) => await handleData(message, session),
       logLevel: 'DEBUG',
     });
