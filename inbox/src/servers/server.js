@@ -24,20 +24,17 @@ export function startServer() {
       onMAILFROM: async (address, session) => await handleMailFrom(address, session),
       onEHLO: async (domain, session) => await handleEhlo(domain, session),
       onDATA: async (message, session) => await handleData(message, session),
-      logLevel: 'DEBUG',
+      onConnect: async(session) => await handleConnect(session).catch(e => {
+        session.send(e);
+        session.socket.end();
+      }),
+      logLevel: process.env.LOG_LEVEL || 'INFO',
     });
   } catch (e) {
     console.error(e);
     cleanup();
     process.exit(1);
   }
-
-  Listen.on('CONNECT', async (session) => {
-    handleConnect(session).catch(e => {
-      session.send(e);
-      session.socket.end()
-    })
-  });
 
   // Attach error handler
   server.on('error', handleError);
