@@ -9,7 +9,7 @@ import {isIPv4, isIPv6} from 'net';
 /**
  * Handles the RCPT TO command during SMTP transaction.
  *
- * @param {Object} address - The address object containing recipient's email.
+ * @param {String} address - The address of the recipient's email.
  * @param {Object} session - The session object for the SMTP transaction.
  * @returns Function - Returns callback
  */
@@ -22,8 +22,16 @@ export async function handleRcptTo(address, {id}) {
   return true;
 }
 
+/**
+ * Handles the MAIL FROM command during SMTP transaction.
+ *
+ * @param {String} address - The sender's email address.
+ * @param {Object} session - The session object for the SMTP transaction.
+ * @returns {Promise<void>}
+ */
 export async function handleMailFrom(address, session) {
-
+  if (!address.match(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/))
+    throw new Response('Bad destination mailbox address syntax', 501, [5, 1, 3]);
 }
 
 /**

@@ -1,5 +1,5 @@
 import fs from 'fs';
-import {Listen, startSMTPServer, Log} from '@carlgo11/smtp-server';
+import {startSMTPServer, Log} from '@carlgo11/smtp-server';
 import {tlsConfig as tlsOptions} from '../config/tls.js';
 import {
   handleConnect,
