@@ -5,6 +5,7 @@ import Spamhaus from '../validators/spamhaus.js';
 import ipScore from '../validators/ipScore.js';
 import ipQS from '../validators/ipQS.js';
 import {isIPv4, isIPv6} from 'net';
+import Redis from '../services/redisService.js';
 
 /**
  * Handles the RCPT TO command during SMTP transaction.
@@ -30,8 +31,10 @@ export async function handleRcptTo(address, {id}) {
  * @returns {Promise<void>}
  */
 export async function handleMailFrom(address, session) {
-  if (!address.match(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/))
-    throw new Response('Bad destination mailbox address syntax', 501, [5, 1, 3]);
+  if (!address.match(
+      /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/))
+    throw new Response('Bad destination mailbox address syntax', 501,
+        [5, 1, 3]);
 }
 
 /**
@@ -65,32 +68,58 @@ export async function handleData(stream, session) {
 export async function handleConnect({clientIP, id, rDNS}) {
   const ipqsScoreLimit = parseInt(process.env.IPQS_SCORE_LIMIT, 10) || 90;
 
-  if (process.env.INBOX_AUTH.includes('rdns'))
-    if (rDNS === null)
-      throw new Response(`Reverse DNS validation failed`, 554, [5, 7, 25]);
+  // Check if the result is cached first
+  const cacheKey = `ip-lookup:${clientIP}`;
+  const cachedResult = await Redis.get(cacheKey);
 
+  // If cached, return the cached response
+  if (cachedResult !== null)
+    if(cachedResult === true) return cachedResult
+    else throw new Response(cachedResult, 554, [5, 7, 1]);
+
+  // Perform checks if not cached
   return Promise.all([
     Spamhaus.lookupIP(clientIP).then((listed) => {
       if (listed) {
+        const errorMessage = 'IP blacklisted by Spamhaus';
         Log.info(`${clientIP} blacklisted by Spamhaus`, id);
-        throw new Response('IP blacklisted by Spamhaus', 554, [5, 7, 1]);
+        // Cache the error message and throw the response
+        throw new Response(errorMessage, 554, [5, 7, 1]);
       }
     }),
 
     ipQS.lookupIP(clientIP).then((score) => {
       if (score > ipqsScoreLimit) {
+        const errorMessage = `IP reported as malicious by IPQS with score: ${score}`;
         Log.info(`${clientIP} has high IPQS score: ${score}`, id);
-        throw new Response('IP reported as malicious by IPQS', 554, [5, 7, 1]);
+        // Cache the error message and throw the response
+        throw new Response(errorMessage, 554, [5, 7, 1]);
       }
     }),
 
     ipScore.lookupIP(clientIP).then((list) => {
       if (list !== null) {
+        const errorMessage = `IP blacklisted by ${list}`;
         Log.info(`${clientIP} blacklisted by ${list}`, id);
-        throw new Response(`IP blacklisted by ${list}`, 554, [5, 7, 1]);
+        // Cache the error message and throw the response
+        throw new Response(errorMessage, 554, [5, 7, 1]);
       }
     }),
-  ]);
+
+    () => {
+      if (process.env.INBOX_AUTH.includes('rdns') && rDNS === null)
+        throw new Response(`Reverse DNS validation failed`, 554, [5, 7, 25]);
+    },
+  ]).then(() => {
+    // If no errors were thrown, cache the success result
+    Redis.set(cacheKey, true, 3600);  // Cache "true" for 1 hour if the IP is safe
+    return true;  // IP is safe
+  }).catch((e) => {
+    if (e instanceof Response)
+      Redis.set(cacheKey, e.message, 3600);
+
+    throw e;
+  });
 }
 
 /**
