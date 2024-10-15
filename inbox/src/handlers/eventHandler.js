@@ -122,21 +122,6 @@ export async function handleConnect({clientIP, id, rDNS}) {
   });
 }
 
-/**
- * Handles secure connection upgrade (STARTTLS) during SMTP transaction.
- *
- * @param {Object} socket - The socket object of the connection.
- * @param {Object} session - The session object for the SMTP transaction.
- * @param {Function} callback - The callback to signal the completion of the upgrade.
- * @returns Function - Returns callback
- */
-export function handleSecure(socket, session, callback) {
-  const protocol = socket.getProtocol();
-  const cipherName = socket.getCipher().name;
-  Log.info(`Connection upgraded to ${protocol} (${cipherName})`, session.id);
-  return callback();
-}
-
 export async function handleEhlo(domain, session) {
   if (session.rDNS && domain !== session.rDNS)
     throw new Response(`Reverse DNS validation failed`, 550, [5, 7, 25]);
