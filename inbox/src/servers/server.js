@@ -20,8 +20,9 @@ export function startServer() {
     // Create SMTP server instance
     server = new startSMTPServer({
     tlsOptions,
+      extensions: ['ENHANCEDSTATUSCODES', 'PIPELINING', 'REQUIRETLS', 'ONEX', '8BITMIME'],
       onRCPTTO: async (address, session) => await handleRcptTo(address, session),
-      onMAILFROM: async (address, session) => await handleMailFrom(address, session),
+      onMAILFROM: async (address, session, ext) => await handleMailFrom(address, session, ext),
       onEHLO: async (domain, session) => await handleEhlo(domain, session),
       onDATA: async (message, session) => await handleData(message, session),
       onConnect: async(session) => await handleConnect(session).catch(e => {

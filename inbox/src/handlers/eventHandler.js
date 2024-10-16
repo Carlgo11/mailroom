@@ -1,10 +1,10 @@
-import {handleIncomingEmail} from '../controllers/emailController.js';
-import {userExists} from '../services/userService.js';
-import {Log, Response} from '@carlgo11/smtp-server';
+import { handleIncomingEmail } from '../controllers/emailController.js';
+import { userExists } from '../services/userService.js';
+import { Log, Response } from '@carlgo11/smtp-server';
 import Spamhaus from '../validators/spamhaus.js';
 import ipScore from '../validators/ipScore.js';
 import ipQS from '../validators/ipQS.js';
-import {isIPv4, isIPv6} from 'net';
+import { isIPv4, isIPv6 } from 'net';
 import Redis from '../services/redisService.js';
 
 /**
@@ -14,7 +14,7 @@ import Redis from '../services/redisService.js';
  * @param {Object} session - The session object for the SMTP transaction.
  * @returns Function - Returns callback
  */
-export async function handleRcptTo(address, {id}) {
+export async function handleRcptTo(address, { id }) {
   const recipientExists = await userExists(address);
   if (!recipientExists) {
     Log.info(`Unknown recipient <${address}>`, id);
@@ -28,13 +28,17 @@ export async function handleRcptTo(address, {id}) {
  *
  * @param {String} address - The sender's email address.
  * @param {Object} session - The session object for the SMTP transaction.
+ * @param {Array} extensions - ESMTP extensions declared as arguments.
  * @returns {Promise<void>}
  */
-export async function handleMailFrom(address, session) {
+export async function handleMailFrom(address, session, extensions) {
   if (!address.match(
-      /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/))
+    /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/))
     throw new Response('Bad destination mailbox address syntax', 501,
-        [5, 1, 3]);
+      [5, 1, 3]);
+
+  if (extensions.includes('BODY=8BITMIME'))
+    session.utf8 = true;
 }
 
 /**
@@ -65,7 +69,7 @@ export async function handleData(stream, session) {
  * @returns {Promise<Awaited<void>[]>} Returns the validation promise of void.
  * @throws {Error} Throws an error if the IP address is blacklisted or has a high fraud score.
  */
-export async function handleConnect({clientIP, id, rDNS}) {
+export async function handleConnect({ clientIP, id, rDNS }) {
   const ipqsScoreLimit = parseInt(process.env.IPQS_SCORE_LIMIT, 10) || 90;
 
   // Check if the result is cached first
@@ -74,7 +78,7 @@ export async function handleConnect({clientIP, id, rDNS}) {
 
   // If cached, return the cached response
   if (cachedResult !== null)
-    if(cachedResult === true) return cachedResult
+    if (cachedResult === true) return cachedResult;
     else throw new Response(cachedResult, 554, [5, 7, 1]);
 
   // Perform checks if not cached
@@ -90,7 +94,7 @@ export async function handleConnect({clientIP, id, rDNS}) {
 
     ipQS.lookupIP(clientIP).then((score) => {
       if (score > ipqsScoreLimit) {
-        const errorMessage = `IP reported as malicious by IPQS with score: ${score}`;
+        const errorMessage = `IP reported as malicious by ipqualityscore.com`;
         Log.info(`${clientIP} has high IPQS score: ${score}`, id);
         // Cache the error message and throw the response
         throw new Response(errorMessage, 554, [5, 7, 1]);
@@ -130,7 +134,7 @@ export async function handleEhlo(domain, session) {
     session.socket.end();
 
   if (isIPv4(domain) || isIPv6(domain) ||
-      (domain.startsWith('[') && domain.endsWith(']')))
+    (domain.startsWith('[') && domain.endsWith(']')))
     throw new Response('IP literals not supported at this time', 501,
-        [5, 5, 2]);
+      [5, 5, 4]);
 }

@@ -36,7 +36,7 @@
     "node-forge": "^1.3.1",
     "nodemailer": "^6.9.14",
     "redis": "^4.7.0",
-    "@carlgo11/smtp-server": "^0.0.6"
+    "@carlgo11/smtp-server": "^0.0.7"
   },
   "engines": {
     "node": ">=16"
