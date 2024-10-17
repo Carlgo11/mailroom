@@ -16,9 +16,7 @@ class Redis {
   }
 
   async get(key) {
-    return this.client.get(key).then(reply => reply ? JSON.parse(reply) : null).catch((e) => {
-      // Log.error('Redis _get error:', e);
-    });
+    return this.client.get(key).then(reply => reply ? reply:null);
   }
 
   async set(key, value, ttl = null) {
