@@ -78,7 +78,7 @@ export async function handleConnect({ clientIP, id, rDNS }) {
 
   // If cached, return the cached response
   if (cachedResult !== null)
-    if (cachedResult === true) return cachedResult;
+    if (cachedResult === "true") return cachedResult;
     else throw new Response(cachedResult, 554, [5, 7, 1]);
 
   // Perform checks if not cached
