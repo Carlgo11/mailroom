@@ -86,7 +86,7 @@ export async function handleConnect({ clientIP, id, rDNS }) {
     Spamhaus.lookupIP(clientIP).then((listed) => {
       if (listed) {
         const errorMessage = 'IP blacklisted by Spamhaus';
-        Log.info(`${clientIP} blacklisted by Spamhaus`, id);
+        Log.warn(`${clientIP} blacklisted by Spamhaus`, id);
         // Cache the error message and throw the response
         throw new Response(errorMessage, 554, [5, 7, 1]);
       }
@@ -95,7 +95,7 @@ export async function handleConnect({ clientIP, id, rDNS }) {
     ipQS.lookupIP(clientIP).then((score) => {
       if (score > ipqsScoreLimit) {
         const errorMessage = `IP reported as malicious by ipqualityscore.com`;
-        Log.info(`${clientIP} has high IPQS score: ${score}`, id);
+        Log.warn(`${clientIP} has high IPQS score: ${score}`, id);
         // Cache the error message and throw the response
         throw new Response(errorMessage, 554, [5, 7, 1]);
       }
@@ -104,7 +104,7 @@ export async function handleConnect({ clientIP, id, rDNS }) {
     ipScore.lookupIP(clientIP).then((list) => {
       if (list !== null) {
         const errorMessage = `IP blacklisted by ${list}`;
-        Log.info(`${clientIP} blacklisted by ${list}`, id);
+        Log.warn(`${clientIP} blacklisted by ${list}`, id);
         // Cache the error message and throw the response
         throw new Response(errorMessage, 554, [5, 7, 1]);
       }

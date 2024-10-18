@@ -8,7 +8,6 @@ import {
   handleRcptTo,
 } from '../handlers/eventHandler.js';
 
-// Use createRequire to import CommonJS modules in ESM
 const pidFile = '/var/tmp/inbox.pid';
 let server;
 
@@ -21,6 +20,7 @@ export function startServer() {
     server = new startSMTPServer({
     tlsOptions,
       extensions: ['ENHANCEDSTATUSCODES', 'PIPELINING', 'REQUIRETLS', 'ONEX', '8BITMIME'],
+      greeting: process.env.INBOX_HOST,
       onRCPTTO: async (address, session) => await handleRcptTo(address, session),
       onMAILFROM: async (address, session, ext) => await handleMailFrom(address, session, ext),
       onEHLO: async (domain, session) => await handleEhlo(domain, session),
