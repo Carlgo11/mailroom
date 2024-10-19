@@ -1,5 +1,5 @@
 import redis from 'redis';
-import { Log } from '@carlgo11/smtp-server';
+import { Logger } from '@carlgo11/smtp-server';
 
 class Redis {
   constructor() {
@@ -8,9 +8,9 @@ class Redis {
         url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
       });
 
-      this.client.connect().then(() => Log.debug('Connected to Redis server.'));
+      this.client.connect().then(() => Logger.debug('Connected to Redis server.'));
     } catch (e) {
-      Log.error(`Redis error: ${e}`);
+      Logger.error(`Redis error: ${e}`);
       throw e;
     }
   }
@@ -24,7 +24,7 @@ class Redis {
     if (ttl)
       args.push('EX', ttl); // Set expiration if TTL is provided
     return this.client.set(...args).catch((e) => {
-      Log.error('Redis _set error:', e);
+      Logger.error('Redis _set error:', e);
       throw e;
     });
   }

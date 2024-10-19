@@ -1,5 +1,5 @@
 import fs from 'fs';
-import {startSMTPServer, Log} from '@carlgo11/smtp-server';
+import {Server, Logger} from '@carlgo11/smtp-server';
 import {tlsConfig as tlsOptions} from '../config/tls.js';
 import {
   handleConnect,
@@ -11,13 +11,13 @@ import {
 const pidFile = '/var/tmp/inbox.pid';
 let server;
 
-export function startServer() {
+export default function startServer() {
   // Write the PID file
   fs.writeFileSync(pidFile, process.pid.toString(), {encoding: 'utf8'});
 
   try {
     // Create SMTP server instance
-    server = new startSMTPServer({
+    server = new Server({
     tlsOptions,
       extensions: ['ENHANCEDSTATUSCODES', 'PIPELINING', 'REQUIRETLS', 'ONEX', '8BITMIME'],
       greeting: process.env.INBOX_HOST,
@@ -25,10 +25,7 @@ export function startServer() {
       onMAILFROM: async (address, session, ext) => await handleMailFrom(address, session, ext),
       onEHLO: async (domain, session) => await handleEhlo(domain, session),
       onDATA: async (message, session) => await handleData(message, session),
-      onConnect: async(session) => await handleConnect(session).catch(e => {
-        session.send(e);
-        session.socket.end();
-      }),
+      onConnect: async(session) => await handleConnect(session),
       logLevel: process.env.LOG_LEVEL || 'INFO',
     });
   } catch (e) {
@@ -42,7 +39,7 @@ export function startServer() {
 
   // Start listening
   server.listen(process.env.INBOX_PORT, () => {
-    Log.info(`Inbox server listening on port ${process.env.INBOX_PORT}`);
+    Logger.info(`Inbox server listening on port ${process.env.INBOX_PORT}`);
   });
 }
 
@@ -50,21 +47,21 @@ function handleError(err) {
   if (err.library === 'SSL routines') {
     switch (err.code) {
       case 'ERR_SSL_NO_SHARED_CIPHER':
-        Log.info(
+        Logger.info(
             `${err.remote} does not support any compatible TLS ciphers.`,
         );
         break;
       case 'ERR_SSL_UNSUPPORTED_PROTOCOL':
-        Log.info(
+        Logger.info(
             `${err.remote} does not support any compatible TLS versions.`,
         );
         break;
       default:
-        Log.info(`TLS Error: ${err.reason} (${err.remote})`);
+        Logger.info(`TLS Error: ${err.reason} (${err.remote})`);
         break;
     }
   } else {
-    Log.error(`Error: ${err.reason || err.message || err}`);
+    Logger.error(`Error: ${err.reason || err.message || err}`);
   }
 }
 
@@ -91,6 +88,3 @@ process.on('uncaughtException', (err) => {
   cleanup();
   process.exit(1);
 });
-
-// Export the startServer function as default
-export default startServer;

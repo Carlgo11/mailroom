@@ -4,7 +4,7 @@ import processRspamd from './spamService.js';
 import saveEmail from './mailboxService.js';
 import {encryptEmail} from './smimeService.js';
 import {userExists} from './userService.js';
-import {Log} from '@carlgo11/smtp-server';
+import {Logger} from '@carlgo11/smtp-server';
 
 export class EmailService {
   async processIncomingEmail(message, session) {
@@ -39,7 +39,7 @@ export class EmailService {
             // Save S/MIME encrypted email
             await saveEmail(rcpt, newEmail);
           } catch (e) {
-            Log.debug(`Unable to S/MIME sign message. Error: ${e}`,session.id)
+            Logger.debug(`Unable to S/MIME sign message. Error: ${e}`,session.id)
             // Save unencrypted email
             await saveEmail(rcpt, email);
           }

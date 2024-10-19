@@ -1,6 +1,6 @@
 import { handleIncomingEmail } from '../controllers/emailController.js';
 import { userExists } from '../services/userService.js';
-import { Log, Response } from '@carlgo11/smtp-server';
+import { Logger, Response } from '@carlgo11/smtp-server';
 import Spamhaus from '../validators/spamhaus.js';
 import ipScore from '../validators/ipScore.js';
 import ipQS from '../validators/ipQS.js';
@@ -17,7 +17,7 @@ import Redis from '../services/redisService.js';
 export async function handleRcptTo(address, { id }) {
   const recipientExists = await userExists(address);
   if (!recipientExists) {
-    Log.info(`Unknown recipient <${address}>`, id);
+    Logger.info(`Unknown recipient <${address}>`, id);
     throw new Response(`Mailbox <${address}> not found`, 550, [5, 1, 1]);
   }
   return true;
@@ -50,12 +50,12 @@ export async function handleMailFrom(address, session, extensions) {
  */
 export async function handleData(stream, session) {
   try {
-    Log.info('Client sending message', session.id);
+    Logger.info('Client sending message', session.id);
     await handleIncomingEmail(stream, session);
-    Log.info('Message accepted', session.id);
+    Logger.info('Message accepted', session.id);
     return true;
   } catch (err) {
-    Log.error(`Message rejected: ${err.message}`, session.id);
+    Logger.error(`Message rejected: ${err.message}`, session.id);
     throw err;
   }
 }
@@ -86,7 +86,7 @@ export async function handleConnect({ clientIP, id, rDNS }) {
     Spamhaus.lookupIP(clientIP).then((listed) => {
       if (listed) {
         const errorMessage = 'IP blacklisted by Spamhaus';
-        Log.warn(`${clientIP} blacklisted by Spamhaus`, id);
+        Logger.warn(`${clientIP} blacklisted by Spamhaus`, id);
         // Cache the error message and throw the response
         throw new Response(errorMessage, 554, [5, 7, 1]);
       }
@@ -95,23 +95,23 @@ export async function handleConnect({ clientIP, id, rDNS }) {
     ipQS.lookupIP(clientIP).then((score) => {
       if (score > ipqsScoreLimit) {
         const errorMessage = `IP reported as malicious by ipqualityscore.com`;
-        Log.warn(`${clientIP} has high IPQS score: ${score}`, id);
+        Logger.warn(`${clientIP} has high IPQS score: ${score}`, id);
         // Cache the error message and throw the response
         throw new Response(errorMessage, 554, [5, 7, 1]);
       }
     }),
 
     ipScore.lookupIP(clientIP).then((list) => {
-      if (list !== null) {
+      if (list === null) {
         const errorMessage = `IP blacklisted by ${list}`;
-        Log.warn(`${clientIP} blacklisted by ${list}`, id);
+        Logger.warn(`${clientIP} blacklisted by ${list}`, id);
         // Cache the error message and throw the response
         throw new Response(errorMessage, 554, [5, 7, 1]);
       }
     }),
 
     () => {
-      if (process.env.INBOX_AUTH.includes('rdns') && rDNS === null)
+      if (process.env.INBOX_AUTH.includes('rdns') && rDNS !== null)
         throw new Response(`Reverse DNS validation failed`, 554, [5, 7, 25]);
     },
   ]).then(() => {
@@ -127,7 +127,7 @@ export async function handleConnect({ clientIP, id, rDNS }) {
 }
 
 export async function handleEhlo(domain, session) {
-  if (session.rDNS && domain !== session.rDNS)
+  if (process.env.INBOX_AUTH.includes('rdns') && domain !== session.rDNS)
     throw new Response(`Reverse DNS validation failed`, 550, [5, 7, 25]);
 
   if (domain === process.env.INBOX_HOST)
