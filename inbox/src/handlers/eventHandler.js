@@ -28,7 +28,7 @@ export async function handleRcptTo(address, { id }) {
  *
  * @param {String} address - The sender's email address.
  * @param {Object} session - The session object for the SMTP transaction.
- * @param {Array} extensions - ESMTP extensions declared as arguments.
+ * @param {Object} extensions - ESMTP extensions declared as arguments.
  * @returns {Promise<void>}
  */
 export async function handleMailFrom(address, session, extensions) {
@@ -37,7 +37,7 @@ export async function handleMailFrom(address, session, extensions) {
     throw new Response('Bad destination mailbox address syntax', 501,
       [5, 1, 3]);
 
-  if (extensions.includes('BODY=8BITMIME'))
+  if (Object.keys(extensions).includes('BODY') && extensions['BODY'] === '8BITMIME')
     session.utf8 = true;
 }
 
@@ -102,7 +102,7 @@ export async function handleConnect({ clientIP, id, rDNS }) {
     }),
 
     ipScore.lookupIP(clientIP).then((list) => {
-      if (list === null) {
+      if (list != null) {
         const errorMessage = `IP blacklisted by ${list}`;
         Logger.warn(`${clientIP} blacklisted by ${list}`, id);
         // Cache the error message and throw the response
