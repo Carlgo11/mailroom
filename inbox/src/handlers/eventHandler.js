@@ -78,8 +78,10 @@ export async function handleConnect({ clientIP, id, rDNS }) {
 
   // If cached, return the cached response
   if (cachedResult !== null)
-    if (cachedResult === "true") return cachedResult;
-    else throw new Response(cachedResult, 554, [5, 7, 1]);
+    if (cachedResult !== 'true') {
+      Logger.warn(`${clientIP} stored as bad IP`, id);
+      throw new Response(cachedResult, 554, [5, 7, 1]);
+    } else return true;
 
   // Perform checks if not cached
   return Promise.all([
