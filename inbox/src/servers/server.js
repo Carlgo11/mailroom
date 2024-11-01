@@ -27,6 +27,7 @@ export default function startServer() {
       onDATA: async (message, session) => await handleData(message, session),
       onConnect: async(session) => await handleConnect(session),
       logLevel: process.env.LOG_LEVEL || 'INFO',
+      maxConnections: process.env.INBOX_MAX_CONNECTIONS || 100,
     });
   } catch (e) {
     console.error(e);
