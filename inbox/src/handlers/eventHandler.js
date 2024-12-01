@@ -6,6 +6,7 @@ import ipScore from '../validators/ipScore.js';
 import ipQS from '../validators/ipQS.js';
 import { isIPv4, isIPv6 } from 'net';
 import Redis from '../services/redisService.js';
+import { spf } from '../validators/mailAuth.js';
 
 /**
  * Handles the RCPT TO command during SMTP transaction.
@@ -36,6 +37,9 @@ export async function handleMailFrom(address, session, extensions) {
     /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/))
     throw new Response('Bad destination mailbox address syntax', 501,
       [5, 1, 3]);
+
+  if (await spf(session.address, address, session.ehlo))
+    throw new Response('SPF validation failed', 550, [5, 7, 23]);
 
   if (Object.keys(extensions).includes('BODY') && extensions['BODY'] === '8BITMIME')
     session.utf8 = true;

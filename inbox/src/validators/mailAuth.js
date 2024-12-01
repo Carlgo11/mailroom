@@ -11,3 +11,14 @@ export async function Validate(email) {
     mta: process.env.INBOX_HOST,
   });
 }
+
+export async function spf(ip, sender, helo) {
+  const { spf } = require('mailauth/lib/spf');
+  const result = await spf({
+    ip,
+    sender,
+    helo,
+  });
+
+  return result.status.result === 'fail';
+}
