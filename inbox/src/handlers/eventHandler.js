@@ -50,7 +50,7 @@ export async function handleMailFrom(address, session, extensions) {
  */
 export async function handleData(stream, session) {
   try {
-    Logger.info('Client sending message', session.id);
+    Logger.debug('Client sending message', session.id);
     await handleIncomingEmail(stream, session);
     Logger.info('Message accepted', session.id);
     return true;
