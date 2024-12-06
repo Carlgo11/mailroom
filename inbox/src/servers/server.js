@@ -19,7 +19,7 @@ export default function startServer() {
     // Create SMTP server instance
     server = new Server({
     tlsOptions,
-      extensions: ['ENHANCEDSTATUSCODES', 'PIPELINING', 'REQUIRETLS', 'ONEX', '8BITMIME'],
+      extensions: ['ENHANCEDSTATUSCODES', 'PIPELINING', 'REQUIRETLS', '8BITMIME'],
       greeting: process.env.INBOX_HOST,
       onRCPTTO: async (address, session) => await handleRcptTo(address, session),
       onMAILFROM: async (address, session, ext) => await handleMailFrom(address, session, ext),
