@@ -1,0 +1,48 @@
+profile inbox-profile flags=(attach_disconnected, mediate_deleted) {
+
+  ## Node.js Execution
+  /usr/local/bin/node rix,                 # Allow execution of Node.js
+  /usr/bin/openssl ix,                     # OpenSSL for certificates
+
+  ## Libraries
+  /lib/** mrix,                            # Shared libraries
+  /usr/lib/** mrix,
+  /bin/busybox mrix,
+  /etc/ssl/openssl.cnf r,                  # OpenSSL configuration
+
+  ## Application-Specific Files
+  /usr/src/inbox/** r,                     # App source files
+  /usr/src/inbox/node_modules/** r,        # Node.js modules
+
+  ## Certificates
+  /certs/inbox/** r,                       # Certificates
+  /certs/clients/users/** r,               # User-specific certificates
+
+  ## Network Configuration
+  /etc/hosts r,                            # Host resolution
+  /etc/resolv.conf r,                      # DNS resolution
+  /etc/nsswitch.conf r,                    # NSS configuration
+
+  ## Mail Storage
+  /var/mail/vhosts/** w,                   # Mail directories
+
+  ## Temporary Files
+  /tmp/inbox.log w,                        # Log file
+  /var/tmp/inbox.pid rw,                   # PID file
+  /dev/null rw,                            # Null device
+  /dev/urandom r,                          # Random number generator
+
+  ## Process and System Info
+  /proc/self/** r,                         # Access to current process
+  /proc/cpuinfo r,                         # CPU information
+  /proc/meminfo r,                         # Memory information
+  /proc/[0-9]*/cgroup r,                   # cgroup for running processes
+  /proc/[0-9]*/maps r,                     # Memory maps for processes
+  /sys/fs/cgroup/** r,                     # cgroups (read-only)
+
+  ## Capabilities
+  capability dac_override,                 # Override DAC restrictions for file access
+
+  ## Signals
+  signal (receive) peer=unconfined,        # Allow signals from unconfined processes
+}
