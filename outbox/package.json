@@ -4,7 +4,7 @@
   "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "run": "REDIS_HOST=localhost REDIS_PORT=6379 node ./src/server.js"
+    "run": "node ./src/server.js"
   },
   "dependencies": {
     "@carlgo11/smtp-server": "^0.0.7",
