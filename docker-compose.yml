@@ -2,20 +2,30 @@ services:
   inbox:
     container_name: inbox
     image: carlgo11/mailroom-inbox
+    pull_policy: always
     ports:
       - "25:25"
     volumes:
       - ./certs/inbox:/certs/inbox:ro
       - ./certs/clients/users:/certs/clients/users:ro
       - vhosts:/var/mail/vhosts
+      - /var/log/inbox.log:/tmp/inbox.log
     env_file: .env
+    entrypoint: sh -c "node src/index.js 2>&1 | tee /tmp/inbox.log"
     depends_on:
       - redis
     networks:
-      - postnet
+      default:
+        aliases:
+          - inbox
+      postnet:
+        ipv4_address: 172.22.0.4
     read_only: true
     tmpfs:
       - /tmp
+      - /var/tmp
+    security_opt:
+      - apparmor=inbox-profile
 
   outbox:
     container_name: outbox
@@ -37,13 +47,14 @@ services:
       - /tmp
 
   redis:
-    container_name: redis_mail
     image: redis:alpine
+    container_name: redis_mail
+    restart: unless-stopped
     volumes:
       - redis_data:/data
     networks:
       postnet:
-        ipv4_address: 172.18.0.3
+        ipv4_address: 172.22.0.3
 
   dovecot:
     container_name: dovecot
@@ -59,7 +70,8 @@ services:
     depends_on:
       - redis
     networks:
-      - postnet
+      postnet:
+        ipv4_address: 172.22.0.6
     read_only: true
     tmpfs:
       - /run/dovecot
@@ -93,6 +105,14 @@ services:
     networks:
       - postnet
 
+  unbound:
+    container_name: unbound
+    image: mvance/unbound
+    restart: unless-stopped
+    networks:
+      postnet:
+        ipv4_address: 172.22.0.8
+
 volumes:
   redis_data:
   vhosts:
@@ -104,4 +124,4 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.18.0.0/24
+        - subnet: 172.22.0.0/24
