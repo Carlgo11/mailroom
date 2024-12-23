@@ -40,11 +40,12 @@ services:
     env_file: .env
     depends_on:
       - redis
-    networks:
-      - postnet
     read_only: true
     tmpfs:
       - /tmp
+    networks:
+      postnet:
+        ipv4_address: 172.22.0.5
 
   redis:
     image: redis:alpine
@@ -92,7 +93,8 @@ services:
     depends_on:
       - redis
     networks:
-      - postnet
+      postnet:
+        ipv4_address: 172.22.0.7
 
   controller:
     container_name: controller
@@ -124,4 +126,4 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.22.0.0/24
+        - subnet: 172.22.0.0/28

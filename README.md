@@ -116,6 +116,25 @@ The following features are currently not implemented:
 - TLSA record generation
 - Alias creation
 
+## Service Address Table
+
+The project uses a dedicated network for inter-container communication. Said network is named "Postnet".
+
+This is the default address table for the Postnet:
+
+| IPv4 Address | Hostname   |
+|--------------|------------|
+| 172.22.0.1   | HOST       |
+| 172.22.0.2   |            |
+| 172.22.0.3   | redis_mail |
+| 172.22.0.4   | inbox      |
+| 172.22.0.5   | outbox     |
+| 172.22.0.6   | dovecot    |
+| 172.22.0.7   | rspamd     |
+| 172.22.0.8   | unbound    |
+
+The default subnet mask for Postnet is `255.255.255.240` which corresponds to `172.22.0.0/28`.
+
 ## License
 
 This project is licensed under GPLv3 - see the [LICENSE](/LICENSE) file for details.
