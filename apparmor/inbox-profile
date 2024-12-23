@@ -1,48 +1,46 @@
 profile inbox-profile flags=(attach_disconnected, mediate_deleted) {
 
-  ## Node.js Execution
+  ## Node.js execution and libraries
   /usr/local/bin/node rix,                 # Allow execution of Node.js
-  /usr/bin/openssl ix,                     # OpenSSL for certificates
-
-  ## Libraries
   /lib/** mrix,                            # Shared libraries
   /usr/lib/** mrix,
   /bin/busybox mrix,
+  /usr/bin/openssl ix,                     # OpenSSL for certificates
   /etc/ssl/openssl.cnf r,                  # OpenSSL configuration
 
-  ## Application-Specific Files
+  ## Application files and modules
   /usr/src/inbox/** r,                     # App source files
-  /usr/src/inbox/node_modules/** r,        # Node.js modules
 
-  ## Certificates
-  /certs/inbox/** r,                       # Certificates
-  /certs/clients/users/** r,               # User-specific certificates
-
-  ## Network Configuration
+  ## Network-related files
   /etc/hosts r,                            # Host resolution
   /etc/resolv.conf r,                      # DNS resolution
   /etc/nsswitch.conf r,                    # NSS configuration
 
-  ## Mail Storage
+  ## Certificate and mail storage
+  /certs/inbox/** r,                       # Certificates
+  /certs/clients/users/** r,               # User-specific certificates
   /var/mail/vhosts/** w,                   # Mail directories
 
-  ## Temporary Files
+  ## Temporary and process files
   /tmp/inbox.log w,                        # Log file
+  /tmp/*.eml rw,
+  /tmp/*.pem rw,
   /var/tmp/inbox.pid rw,                   # PID file
-  /dev/null rw,                            # Null device
   /dev/urandom r,                          # Random number generator
-
-  ## Process and System Info
-  /proc/self/** r,                         # Access to current process
-  /proc/cpuinfo r,                         # CPU information
-  /proc/meminfo r,                         # Memory information
-  /proc/[0-9]*/cgroup r,                   # cgroup for running processes
-  /proc/[0-9]*/maps r,                     # Memory maps for processes
+  /dev/null rw,                            # Null device
+  /proc/self/** r,                         # Process info (read-only)
+  /proc/cpuinfo r,
+  /proc/meminfo r,
+  /proc/[0-9]*/cgroup r,
+  /proc/[0-9]*/maps r,
   /sys/fs/cgroup/** r,                     # cgroups (read-only)
 
-  ## Capabilities
-  capability dac_override,                 # Override DAC restrictions for file access
-
-  ## Signals
+  ## Capabilities and signals
+  capability dac_override,                 # Required capability for file access
   signal (receive) peer=unconfined,        # Allow signals from unconfined processes
+  network inet stream,
+  network inet6 dgram,
+  network inet6 stream,
+  network netlink raw,
+  deny network,
 }
