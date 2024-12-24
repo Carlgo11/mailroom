@@ -1,27 +1,67 @@
-# **Mail Room**
+<center>
+<h1>Mail Room</h1>
+</center>
 
 Mail Room is a lightweight email handling system built with Node.js and Docker, designed to securely process incoming and outgoing emails. It includes strict authentication checks (SPF, DKIM, ARC), spam detection using Rspamd, and integrates with Dovecot for mailbox management. The project is modular, consisting of distinct services that manage different aspects of email processing.
 
+Table of contents
+=================
+
+- [Services](#services)
+   * [Development Progress](#development-progress)
+- [Installation](#installation)
+   * [Assisted Configuration](#assisted-configuration)
+   * [Manual Configuration](#manual-configuration)
+- [Usage](#usage)
+   * [Managing users and certificates](#managing-users-and-certificates)
+- [Networking](#networking)
+   * [Ports and Firewalls](#ports-and-firewalls)
+   * [Internal Network](#internal-network)
+- [License](#license)
+
 ## Services
 
-* __Controller__ - Account management API
-* __Inbox__ - SMTP server (MTA) for incoming emails
-* __Outbox__ - SMTP server (MSA) for outgoing emails
-* __Dovecot__ - IMAP server
-* __Rspamd__ - Spam service
-* __Redis__ - Account database
+The goal with Mail Room is to handle SMTP traffic. As SMTP is only part of what is needed for modern email handling, other projects responsible for other protocols have been bundled with this project.
 
-## Requirements
+The following services are native to Mail Room:
 
-To run the project you need a server with Docker and the following ports open:
-- 25 - SMTP (inbox)
-- 465 - SMTP (outbox)
-- 993 - IMAP (dovecot)
+| Name       | Description                           |       Status       |
+|------------|---------------------------------------|:------------------:|
+| Controller | Account management API server         |    Experimental    |
+| Inbox      | SMTP server (MTA) for incoming emails | Production Release |
+| Outbox     | SMTP server (MSA) for outgoing emails | Under Development  |
+| Backup     | Backup service                        |    Experimental    |
+
+These services are external projects bundled with Mail Room:
+
+| Name    | Description      | Website                            | License      |
+|---------|------------------|------------------------------------|--------------|
+| Dovecot | IMAP server      | [dovecot.org](https://dovecot.org) | MIT & LGPLv2 |
+| Rspamd  | Anti-spam server | [rspamd.com](https://rspamd.com/)  | Apache-2.0   |
+| Redis   | Database server  | [redis.io](https://redis.io/)      | RSALv2       |
+
+### Development Progress
+
+The following features are currently not implemented:
+
+#### Inbox
+- [ ] DSN messages
+
+#### Outbox
+- [ ] CC/BCC
+- [ ] DSN messages
+- [ ] Greylisting
+- [ ] Alias support
+- [ ] Status emails on message failure
+
+#### Controller
+- [ ] DKIM certificate generation
+- [ ] TLSA record generation
+- [ ] Alias creation
 
 ## Installation
 
-### Assisted configuration
-
+### Assisted Configuration
 1. Run the installation script
    ```shell
    curl https://raw.githubusercontent.com/Carlgo11/mailroom/master/install.sh | bash
@@ -32,7 +72,7 @@ To run the project you need a server with Docker and the following ports open:
    docker compose up -d
    ```
 
-### Manual configuration
+### Manual Configuration
 
 1. Create a directory
     ```bash
@@ -63,8 +103,7 @@ To run the project you need a server with Docker and the following ports open:
 
 ## Usage
 
-### Running the project
-Start the services using Docker Compose:
+To start the services using Docker Compose, run:
   ```bash
   docker compose up -d
   ```
@@ -82,45 +121,31 @@ To add or remove a user, use the mailroom cli tool:
      generate-cert <email>            Generate a client certificate for the user
    ```
 
-## Project Structure
-  ```text
-  .
-  ├── certs/                 # SSL/TLS certificates for inbox, outbox, and dovecot
-  │   ├── dovecot/
-  │   ├── inbox/
-  │   └── outbox/
-  ├── conf/                  # Configuration files
-  │   ├── dovecot/
-  │   └── rspamd/
-  ├── controller/            # Controller server source
-  ├── inbox/                 # Inbox (MX) server source
-  ├── outbox/                # Outbox (Submission) server source
-  └── rspamd/                # Rspamd service Docker build instructions
-  ```
+## Networking
 
-## Current limitations
-The following features are currently not implemented:
-### Inbox
-- Multi-mailbox RCPT
-- DSN messages
+### Ports and Firewalls
 
-## Outbox
-- CC/BCC
-- DSN messages
-- Greylisting
-- Alias support
-- Status emails on message failure
+#### Incoming
+| Port | Type | Destination       | Description       |
+|------|------|-------------------|-------------------|
+| 25   | TCP  | Inbox             | SMTP (incoming)   |
+| 587  | TCP  | Outbox            | SMTP (submission) |
+| 993  | TCP  | Dovecot           | IMAP              |
 
-## Controller
-- DKIM certificate generation
-- TLSA record generation
-- Alias creation
+#### Outgoing
+| Port | Type    | Source  | Description            |
+|------|---------|---------|------------------------|
+| 25   | TCP     | Outbox  | SMTP (outgoing)        |
+| 53   | UDP/TCP | Unbound | DNS                    |
+| 443  | TCP     | Inbox   | IP reputation services |
+| 443  | TCP     | Rspamd  | IP reputation services |
 
-## Service Address Table
+### Internal Network
 
 The project uses a dedicated network for inter-container communication. Said network is named "Postnet".
+The default subnet mask for Postnet is `255.255.255.240` which corresponds to `172.22.0.0/28`.
 
-This is the default address table for the Postnet:
+This is the address table for the Postnet:
 
 | IPv4 Address | Hostname   |
 |--------------|------------|
@@ -132,8 +157,6 @@ This is the default address table for the Postnet:
 | 172.22.0.6   | dovecot    |
 | 172.22.0.7   | rspamd     |
 | 172.22.0.8   | unbound    |
-
-The default subnet mask for Postnet is `255.255.255.240` which corresponds to `172.22.0.0/28`.
 
 ## License
 
