@@ -1,7 +1,8 @@
 import { Server, Logger, registerCommand } from '@carlgo11/smtp-server';
 import fs from 'fs';
-import { handleAuth } from './handlers/auth.js';
+import handleAuth from './handlers/auth.js';
 import handleMail from './handlers/mail.js';
+import handleData from './handlers/data.js';
 
 const server = Server({
   tlsOptions: {
@@ -14,7 +15,7 @@ const server = Server({
   },
   extensions: ['ENHANCEDSTATUSCODES', 'PIPELINING', 'AUTH PLAIN', '8BITMIME'],
   onMAILFROM: handleMail,
-
+  onDATA: handleData,
 });
 
 function cleanup() {

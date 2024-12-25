@@ -7,8 +7,9 @@
     "run": "node ./src/server.js"
   },
   "dependencies": {
-    "@carlgo11/smtp-server": "^0.0.7",
+    "@carlgo11/smtp-server": "^0.0.8",
     "bcrypt": "^5.1.1",
+    "mailparser": "^3.7.1",
     "redis": "^4.7.0"
   }
 }

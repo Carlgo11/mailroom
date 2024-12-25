@@ -2,7 +2,7 @@ import { Response } from '@carlgo11/smtp-server';
 import redis from '../services/redis.js';
 import bcrypt from 'bcrypt';
 
-export async function handleAuth(args, session) {
+export default async function handleAuth(args, session) {
   if (!session.tls)
     return session.send(new Response('STARTTLS required', 523, [5, 7, 10]));
 
