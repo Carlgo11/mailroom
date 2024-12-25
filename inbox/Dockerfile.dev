@@ -22,4 +22,4 @@ WORKDIR /usr/src/inbox
 COPY --from=build /app /usr/src/inbox
 COPY ./smtp-server /usr/src/inbox/node_modules/@carlgo11/smtp-server
 
-CMD ["src/index.js"]
+ENTRYPOINT "node src/index.js 2>&1 | tee /tmp/inbox.log"

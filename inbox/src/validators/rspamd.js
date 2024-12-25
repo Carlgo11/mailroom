@@ -1,3 +1,5 @@
+import { Logger } from '@carlgo11/smtp-server';
+
 export async function checkForSpam(email) {
   try {
     const emailContent = `${email.serializeHeaders()}\r\n\r\n${email.body}`;
@@ -19,7 +21,7 @@ export async function checkForSpam(email) {
         });
     return res.json();
   } catch (error) {
-    console.error('Error checking email for spam:', error);
+    Logger.error(`Error checking email for spam: ${error}`);
     throw new Error('Spam check failed');
   }
 }

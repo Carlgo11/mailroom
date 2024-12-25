@@ -1,6 +1,6 @@
 {
   "name": "mailroom-cli",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "",
   "scripts": {
     "build": "make",
@@ -9,8 +9,15 @@
   "bin": {
     "mailroom-cli": "./dist/mailroom-cli.js"
   },
-  "author": "carlgo11",
-  "repository": "https://github.com/Carlgo11/mailroom",
+  "author": "Carlgo11",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/carlgo11/mailroom.git"
+  },
+  "bugs": {
+    "url": "https://github.com/carlgo11/mailroom/issues"
+  },
+  "homepage": "https://github.com/carlgo11/mailroom#readme",
   "license": "LGPL-3.0-or-later",
   "description": "CLI tool for managing users and certificates for Mail Room",
   "devDependencies": {

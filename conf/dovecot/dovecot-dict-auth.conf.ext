@@ -1,5 +1,3 @@
-# /etc/dovecot/dovecot-dict-auth.conf
-
 uri = redis:host=172.18.0.3:port=6379
 
 default_pass_scheme = BLF-CRYPT

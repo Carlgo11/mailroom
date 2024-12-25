@@ -2,9 +2,11 @@
 node_modules
 package-lock.json
 aliases.json
-.env
 *.env
+!/.env
 .idea
-certs/
+certs
+dist
+docker-compose.yml
 rclone.conf
 *.bak

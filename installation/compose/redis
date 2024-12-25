@@ -6,4 +6,4 @@
       - redis_data:/data
     networks:
       postnet:
-        ipv4_address: 172.22.0.3
+        ipv4_address: ${POSTNET_NETWORK:-172.22.0}.3

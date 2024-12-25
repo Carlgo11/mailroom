@@ -1,10 +1,10 @@
   controller:
     container_name: controller
-    build: ./controller
+    image: carlgo11/mailroom-controller:${VERSION:-dev}
     ports:
-      - "127.0.0.1:6804:6804/tcp"
+      - ${CONTROLLER_BIND:-6804}:6804/tcp"
     volumes:
-      - ./certs:/certs
-    env_file: .env
+      - ${CERT_PATH:-./certs}:/certs
+    env_file: mailroom.env
     networks:
       - postnet

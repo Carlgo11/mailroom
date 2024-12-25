@@ -1,8 +1,6 @@
   rspamd:
     container_name: rspamd
-    image: carlgo11/mailroom-rspamd
-    ports:
-      - "11334:11334"
+    image: carlgo11/mailroom-rspamd:${VERSION:-dev}
     volumes:
       - rspamd_confdir:/etc/rspamd
       - rspamd_dbdir:/var/lib/rspamd
@@ -13,4 +11,4 @@
       - redis
     networks:
       postnet:
-        ipv4_address: 172.22.0.7
+        ipv4_address: ${POSTNET_NETWORK:-172.22.0}.7

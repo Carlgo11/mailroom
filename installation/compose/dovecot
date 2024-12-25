@@ -1,19 +1,19 @@
   dovecot:
     container_name: dovecot
-    image: dovecot/dovecot:latest
+    image: dovecot/dovecot
     ports:
-      - "${DOVECOT_IP}:993:993"
+      - "${DOVECOT_BIND:-993}:993/tcp"
     volumes:
-      - ./conf/dovecot:/etc/dovecot/conf.d:ro
-      - ./certs/dovecot:/certs/dovecot:ro
-      - ./certs/clients:/certs/clients:ro
+      - ${CONF_PATH:-./configs}/dovecot:/etc/dovecot/conf.d:ro
+      - ${CERT_PATH:-./certs}/dovecot:/certs/dovecot:ro
+      - ${CERT_PATH:-./certs}/clients:/certs/clients:ro
       - vhosts:/var/mail/vhosts
-    env_file: .env
+    env_file: mailroom.env
     depends_on:
       - redis
     networks:
       postnet:
-        ipv4_address: 172.22.0.6
+        ipv4_address: ${POSTNET_NETWORK:-172.22.0}.6
     read_only: true
     tmpfs:
       - /run/dovecot

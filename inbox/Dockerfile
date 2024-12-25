@@ -21,4 +21,4 @@ WORKDIR /usr/src/inbox
 
 COPY --from=build /app /usr/src/inbox
 
-CMD ["src/index.js"]
+ENTRYPOINT "node src/index.js 2>&1 | tee /tmp/inbox.log"
