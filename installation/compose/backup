@@ -1,0 +1,10 @@
+  backup:
+    container_name: backup
+    build: ./backup
+    env_file: backup.env
+    tmpfs:
+      - /tmp
+    read_only: true
+    volumes:
+      - vhosts:/var/mail/vhosts:ro
+      - ./rclone.conf:/rclone.conf:rw

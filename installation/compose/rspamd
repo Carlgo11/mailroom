@@ -1,0 +1,16 @@
+  rspamd:
+    container_name: rspamd
+    image: carlgo11/mailroom-rspamd
+    ports:
+      - "11334:11334"
+    volumes:
+      - rspamd_confdir:/etc/rspamd
+      - rspamd_dbdir:/var/lib/rspamd
+    env_file: .env
+    environment:
+      - RSPAMD_REDIS_SERVERS=rspamd-compose-redis
+    depends_on:
+      - redis
+    networks:
+      postnet:
+        ipv4_address: 172.22.0.7

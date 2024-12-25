@@ -1,0 +1,26 @@
+  inbox:
+    container_name: inbox
+    image: carlgo11/mailroom-inbox:dev
+    pull_policy: always
+    ports:
+      - "25:25"
+    volumes:
+      - ./certs/inbox:/certs/inbox:ro
+      - ./certs/clients/users:/certs/clients/users:ro
+      - vhosts:/var/mail/vhosts
+      - /var/log/inbox.log:/tmp/inbox.log
+    env_file: .env
+    depends_on:
+      - redis
+    networks:
+      default:
+        aliases:
+          - inbox
+      postnet:
+        ipv4_address: 172.22.0.4
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/tmp
+    security_opt:
+      - apparmor=inbox-profile

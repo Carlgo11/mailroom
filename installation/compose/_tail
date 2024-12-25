@@ -1,0 +1,12 @@
+volumes:
+  redis_data:
+  vhosts:
+  rspamd_dbdir:
+  rspamd_confdir:
+
+networks:
+  postnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.22.0.0/28

@@ -1,0 +1,10 @@
+  controller:
+    container_name: controller
+    build: ./controller
+    ports:
+      - "127.0.0.1:6804:6804/tcp"
+    volumes:
+      - ./certs:/certs
+    env_file: .env
+    networks:
+      - postnet

@@ -1,0 +1,21 @@
+  dovecot:
+    container_name: dovecot
+    image: dovecot/dovecot:latest
+    ports:
+      - "${DOVECOT_IP}:993:993"
+    volumes:
+      - ./conf/dovecot:/etc/dovecot/conf.d:ro
+      - ./certs/dovecot:/certs/dovecot:ro
+      - ./certs/clients:/certs/clients:ro
+      - vhosts:/var/mail/vhosts
+    env_file: .env
+    depends_on:
+      - redis
+    networks:
+      postnet:
+        ipv4_address: 172.22.0.6
+    read_only: true
+    tmpfs:
+      - /run/dovecot
+      - /var/lib/dovecot
+      - /tmp

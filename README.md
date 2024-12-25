@@ -21,24 +21,26 @@ Table of contents
 
 ## Services
 
-The goal with Mail Room is to handle SMTP traffic. As SMTP is only part of what is needed for modern email handling, other projects responsible for other protocols have been bundled with this project.
+## Services
 
-The following services are native to Mail Room:
+Mail Room is designed as a modular email handling system, with distinct services managing specific aspects of email processing. These services are categorized into **native services** developed as part of Mail Room and **external services** integrated to handle specialized tasks.
 
-| Name       | Description                           |       Status       |
-|------------|---------------------------------------|:------------------:|
-| Controller | Account management API server         |    Experimental    |
-| Inbox      | SMTP server (MTA) for incoming emails | Production Release |
-| Outbox     | SMTP server (MSA) for outgoing emails | Under Development  |
-| Backup     | Backup service                        |    Experimental    |
+### Native Services
 
-These services are external projects bundled with Mail Room:
+| Name           | Description                                                                             | Status             |
+|----------------|-----------------------------------------------------------------------------------------|--------------------|
+| **Controller** | Provides APIs for managing user accounts, certificates, and other administrative tasks. | Experimental       |
+| **Inbox**      | Processes incoming email traffic.                                                       | Production Release |
+| **Outbox**     | Handles authenticated email submission and outgoing email traffic.                      | Under Development  |
+| **Backup**     | Facilitates backup of user data, and certificates.                                      | Experimental       |
 
-| Name    | Description      | Website                            | License      |
-|---------|------------------|------------------------------------|--------------|
-| Dovecot | IMAP server      | [dovecot.org](https://dovecot.org) | MIT & LGPLv2 |
-| Rspamd  | Anti-spam server | [rspamd.com](https://rspamd.com/)  | Apache-2.0   |
-| Redis   | Database server  | [redis.io](https://redis.io/)      | RSALv2       |
+### External Services
+
+| Name        | Description                                                                              | Website                            | License      |
+|-------------|------------------------------------------------------------------------------------------|------------------------------------|--------------|
+| **Dovecot** | IMAP server                                                                              | [dovecot.org](https://dovecot.org) | MIT & LGPLv2 |
+| **Rspamd**  | Provides robust spam detection and scoring.                                              | [rspamd.com](https://rspamd.com/)  | Apache-2.0   |
+| **Redis**   | Acts as a lightweight, high-performance database for configuration and state management. | [redis.io](https://redis.io/)      | RSALv2       |
 
 ### Development Progress
 
@@ -61,42 +63,65 @@ The following features are currently not implemented:
 
 ## Installation
 
+You can install Mail Room using one of two methods: **Assisted Configuration** or **Manual Configuration**.
+
 ### Assisted Configuration
-1. Run the installation script
+
+Before starting, ensure you have the following prerequisites installed:
+- **cURL**: For downloading installation files.
+- **Docker**: For container orchestration.
+- **Docker Compose**: For container orchestration.
+- **Node.js (>=20.x)**: Required for Mail Room CLI.
+- **Git**: For cloning the repository (optional).
+
+1. Download and run the installation script:
    ```shell
-   curl https://raw.githubusercontent.com/Carlgo11/mailroom/master/install.sh | bash
+   curl https://raw.githubusercontent.com/Carlgo11/mailroom/master/installation/install.sh | bash
    ```
-2. Edit the `.env` file
-3. Start the containers
+
+2. Edit the `.env` configuration file.
+
+3. Start the containers:
    ```shell
    docker compose up -d
    ```
 
 ### Manual Configuration
 
-1. Create a directory
-    ```bash
+Follow these steps to set up Mail Room manually:
+
+1. **Create a project directory**:
+   ```shell
    mkdir mailroom
    cd mailroom
-    ```
-2. Download the `docker-compose.yml` file
+   ```
+
+2. **Download the `docker-compose.yml` file**:
    ```shell
    curl https://raw.githubusercontent.com/Carlgo11/mailroom/master/docker-compose.yml -O docker-compose.yml
    ```
-3. Download the example configuration
+
+3. **Download the example configuration**:
    ```shell
    curl https://raw.githubusercontent.com/Carlgo11/mailroom/master/.env.example -O .env
    ```
-4. Edit the `.env` file
-5. Set up the certificate directories
+
+4. **Edit the `.env` file** to configure Mail Room:
    ```shell
-   mkdir certs/{clients,dkim,dovecot,inbox,outbox} -p
+   nano .env
    ```
-6. Start the Docker containers
+
+5. **Set up certificate directories**:
+   ```shell
+   mkdir -p certs/{clients,dkim,dovecot,inbox,outbox}
+   ```
+
+6. **Start the Docker containers**:
    ```shell
    docker compose up -d
    ```
-7. Download the CLI tool
+
+7. **Install the Mail Room CLI tool**:
    ```shell
    npm install -g mailroom-cli
    ```

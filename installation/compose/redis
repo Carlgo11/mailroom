@@ -1,0 +1,9 @@
+  redis:
+    image: redis:alpine
+    container_name: redis_mail
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      postnet:
+        ipv4_address: 172.22.0.3
