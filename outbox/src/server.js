@@ -43,7 +43,7 @@ process.on('uncaughtException', (err) => {
   process.exit(1);
 });
 
-server.listen(5877, () => {
+server.listen(process.env.OUTBOX_PORT, () => {
   const { address, family, port } = server.address();
   Logger.info(`SMTP Server listening on ${address}:${port} via ${family}`);
 }).on('error', (err) => console.log(`${err}`));
