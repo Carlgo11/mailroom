@@ -1,6 +1,8 @@
 import Email from '../models/email.js';
 import redis from '../services/redis.js';
 import { Response } from '@carlgo11/smtp-server';
+import signMessage from '../services/dkim.js';
+import fs from 'fs/promises';
 
 export default async function handleData(message, session) {
   const from = session.mailFrom;
@@ -13,7 +15,7 @@ export default async function handleData(message, session) {
   ]);
 
   // Verify user can send from that address
-  if(!authorizedSender(session.username, email.headers.from))
+  if(!authorizedSender(session.username, email.headers.from.split('<')[1].split('>')[0].toLowerCase()))
     throw new Response(`${session.username} not allowed to send emails as ${email.headers.from}`, 550, [5, 7, 1]);
 
   // Set RFC 5322 compliant date
@@ -21,7 +23,23 @@ export default async function handleData(message, session) {
   email.headers.date = date;
   email.date = date;
 
-  console.log(email.full_email());
+
+  // DKIM sign message
+  const headers = [
+    `from: ${email.headers.from}`,
+    `to: ${email.headers.to}`,
+    `subject: ${email.headers.subject}`,
+    `date: ${email.headers.date}`,
+    `content-type: ${email.headers['content-type']}`,
+    `mime-version: 1.0`,
+  ]
+
+  const dkimSignature = signMessage(headers, email.body, domain, 'relaxed', await fs.readFile(`${process.env.OUTBOX_DKIM_PATH}/${domain}.key`));
+  if(dkimSignature)
+    email.headers['dkim-signature'] = dkimSignature;
+
+  await fs.writeFile(`/tmp/${email.id}.eml`, email.full_email());
+
 }
 
 function authorizedSender(user, from){
