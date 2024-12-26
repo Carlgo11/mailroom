@@ -1,4 +1,4 @@
-import {createClient} from 'redis';
+import { createClient } from 'redis';
 import bcrypt from 'bcrypt';
 
 // Create a Redis client
@@ -7,8 +7,7 @@ const client = await createClient({
 }).on('error', (e) => console.error('Redis client error:', e)).connect();
 
 export async function register(address, password) {
-  if (await _get(`user:${address}`))
-    return new Error('User already exists');
+  if (await _get(`user:${address}`)) return new Error('User already exists');
 
   const hash = bcrypt.hash(password, 13);
   const [username, domain] = address.split('@');
@@ -16,25 +15,26 @@ export async function register(address, password) {
     password: `{BLF-CRYPT}${await hash}`,
     maildir: `maildir:/var/mail/vhosts/${domain}/${username}/Maildir`,
     home: `/var/mail/vhosts/${domain}/${username}/`,
-  }
+  };
   return await _set(`user:${address}`, JSON.stringify(user));
 }
 
-export async function listUsers(){
+export async function listUsers() {
   const users = await _list('user:*');
-  const userArray = []
-  users.map((user) => {userArray.push(user.replace('user:',''))})
-  return userArray
+  const userArray = [];
+  users.map((user) => {
+    userArray.push(user.replace('user:', ''));
+  });
+  return userArray;
 }
 
 export async function getUser(address) {
   const user = await JSON.parse(await _get(`user:${address}`));
-  if(!user) return null;
+  if (!user) return null;
   console.log(user);
   return {
-    maildir: user.maildir,
-    home: user.home
-  }
+    maildir: user.maildir, home: user.home,
+  };
 }
 
 // Private method to get a value from Redis
