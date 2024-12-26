@@ -4,7 +4,7 @@ WORKDIR /app
 
 RUN npm i --omit=dev
 
-FROM node:alpine
+FROM node:20-alpine
 
 ENV INBOX_PORT="25"
 ENV INBOX_HOST="smtp.example.com"
