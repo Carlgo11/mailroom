@@ -15,37 +15,62 @@ export default async function handleData(message, session) {
   ]);
 
   // Verify user can send from that address
-  if(!authorizedSender(session.username, email.headers.from.split('<')[1].split('>')[0].toLowerCase()))
-    throw new Response(`${session.username} not allowed to send emails as ${email.headers.from}`, 550, [5, 7, 1]);
+  if (!await authorizedSender(session.username,
+    email.headers.from.split('<')[1].split('>')[0].toLowerCase()))
+    throw new Response(
+      `${session.username} not allowed to send emails as ${email.headers.from}`,
+      550, [5, 7, 1]);
 
   // Set RFC 5322 compliant date
   const date = convertDate(email.headers.date || email.date);
   email.headers.date = date;
   email.date = date;
 
+  try {
+    const dkimKey = await fs.readFile(`${process.env.DKIM_PATH}/${domain}.key`);
 
-  // DKIM sign message
-  const headers = [
-    `from: ${email.headers.from}`,
-    `to: ${email.headers.to}`,
-    `subject: ${email.headers.subject}`,
-    `date: ${email.headers.date}`,
-    `content-type: ${email.headers['content-type']}`,
-    `mime-version: 1.0`,
-  ]
+    // DKIM sign message
+    if (dkimKey) {
+      const headers = [
+        'from',
+        'to',
+        'subject',
+        'date',
+        'message-id',
+        'mime-version',
+        'content-type',
+        'content-transfer-encoding',
+      ];
 
-  const dkimSignature = signMessage(headers, email.body, domain, 'relaxed', await fs.readFile(`${process.env.OUTBOX_DKIM_PATH}/${domain}.key`));
-  if(dkimSignature)
-    email.headers['dkim-signature'] = dkimSignature;
+      const dkimSignature = signMessage(
+        email.headers, email.body, domain, 'dkim', dkimKey, headers,
+      );
+      if (dkimSignature) email.headers['dkim-signature'] = dkimSignature;
+    }
+  } catch (_) {
+  }
 
   await fs.writeFile(`/tmp/${email.id}.eml`, email.full_email());
-
 }
 
-function authorizedSender(user, from){
-  return user === from || redis.get(`alias:${from}`) === user;
+/**
+ * Verifies if the given sender is authorized based on the user identity or an alias stored in a Redis database.
+ *
+ * @param {string} user - The identifier of the user to verify.
+ * @param {string} from - The sender identity to check against the user or alias.
+ * @return {Promise<boolean>} A promise resolving to `true` if the sender is authorized, otherwise `false`.
+ */
+async function authorizedSender(user, from) {
+  return user === from || await redis.get(`alias:${from}`) === user;
 }
 
+/**
+ * Converts a given date string into an RFC 5322 compliant format.
+ *
+ * @param {string} dateHeaderValue - The date string to be converted.
+ * @return {string} The formatted date string in RFC 5322 format.
+ * @throws {Error} If the provided date string is invalid.
+ */
 function convertDate(dateHeaderValue) {
   // Parse the date using the built-in Date object
   const parsedDate = new Date(dateHeaderValue);
