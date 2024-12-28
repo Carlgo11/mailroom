@@ -13,6 +13,7 @@ const server = Server({
     maxVersion: 'TLSv1.3',
     ALPNProtocols: ['h2'],
   },
+  logLevel: 'DEBUG',
   extensions: ['ENHANCEDSTATUSCODES', 'PIPELINING', 'AUTH PLAIN', '8BITMIME'],
   onMAILFROM: handleMail,
   onDATA: handleData,
