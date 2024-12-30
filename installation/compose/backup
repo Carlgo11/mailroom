@@ -5,6 +5,7 @@
     tmpfs:
       - /tmp
     read_only: true
+    restart: unless-stopped
     volumes:
       - vhosts:/var/mail/vhosts:ro
       - ./rclone.conf:/rclone.conf:rw
