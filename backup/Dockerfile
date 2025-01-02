@@ -1,5 +1,5 @@
 FROM alpine:latest
-RUN apk upgrade -U; apk add --no-cache rclone
+RUN apk upgrade -U; apk add --no-cache rclone gnupg
 COPY backup.sh /etc/periodic/daily/backup
 COPY --chmod=400 cron.txt /var/spool/cron/crontabs/root
 RUN chmod +x /etc/periodic/daily/backup
