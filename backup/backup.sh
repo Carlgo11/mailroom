@@ -1,41 +1,40 @@
 #!/bin/sh
-
-exec > /dev/stdout 2>&1
-
+DATE=$(date +%FT%TZ -u)
 VHOST_DIR="${VHOST_DIR:-/var/mail/vhosts/}"
 BACKUP_TMP="${BACKUP_TMP:-/tmp/backups}"
-RCLONE_REMOTE="${RCLONE_REMOTE:-backups:/backups}"
-RCLONE_CONFIG="${RCLONE_CONFIG:-/rclone.conf}"
-export GNUPGHOME="/tmp/.gnupg"
-
-DATE=$(date +%FT%TZ -u)
+STAGING_DIR="${BACKUP_TMP}/${DATE}"
 BACKUP_FILE="${DATE}.tar.gz"
 
-mkdir -p "$BACKUP_TMP"
+# Set up staging directory
+mkdir -p "${BACKUP_TMP}"
+chmod 700 "${BACKUP_TMP}"
 
-if ! cp "$RCLONE_CONFIG" /tmp/rclone.conf; then
-  echo "rclone config not set"
-  exit 1
-fi
+echo "Collecting data..."
+mkdir -p "${STAGING_DIR}/vhosts" || { echo "Error: Could not set up staging directory"; exit 1; }
 
-echo "Creating $BACKUP_FILE"
-tar -czf "${BACKUP_TMP}/${BACKUP_FILE}" -C "$VHOST_DIR" .
+# Copy mail directories
+cp -r "$VHOST_DIR" "${STAGING_DIR}/vhosts" || { echo "Error: Failed to collect emails"; exit 1; }
+
+# Copy config variables
+printenv | grep -v "PWD\|TERM\|HOME\|SHLVL\|HOSTNAME" >> "${STAGING_DIR}/mailroom.env"
+
+echo "Creating ${BACKUP_FILE}..."
+tar -czf "${BACKUP_TMP}/${BACKUP_FILE}" -C "${STAGING_DIR}/" . || { echo "Error: Failed to create ${BACKUP_FILE}"; exit 1; }
+
+# Delete staging directory
+rm -rf "${STAGING_DIR:?}" || { echo "Error: Failed to remove staging directory"; exit 1; }
 
 if [ -f /public.key ]; then
-
-    echo "/public.key found. Encrypting the backup."
-
+    echo "Encrypting ${BACKUP_FILE}..."
     if gpg -e -f /public.key "${BACKUP_TMP}/${BACKUP_FILE}"; then
       rm "${BACKUP_TMP}/${BACKUP_FILE}" || exit 1
     else
-      echo "GPG encryption failed"
+      echo "Error: Encryption failed. Falling back to unencrypted version."
     fi
-else
-    echo "No public key found. Proceeding without encryption."
 fi
 
 echo "Uploading backup to $RCLONE_REMOTE"
-rclone copy "${BACKUP_TMP}" "$RCLONE_REMOTE" --config "/tmp/rclone.conf" || exit 1
+rclone copyto "${BACKUP_TMP}/${BACKUP_FILE}" "$RCLONE_REMOTE" --config "/tmp/rclone.conf" || { echo "Error: Upload failed"; exit 1; }
 
 echo "Removing local backup file"
 rm -rf "${BACKUP_TMP:?}"
