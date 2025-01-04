@@ -8,7 +8,7 @@ if ! cp "$RCLONE_CONFIG" /tmp/rclone.conf 2>/dev/null; then
   exit 1
 fi
 
-if [ -n "${RCLONE_REMOTE}" ]; then
+if [ -z "${RCLONE_REMOTE}" ]; then
   echo "Error: Missing rclone remote"
   exit 1
 fi
