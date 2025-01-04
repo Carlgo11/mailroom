@@ -1,10 +1,11 @@
-FROM alpine:latest
+FROM ghcr.io/ironpeakservices/iron-alpine/iron-alpine:3.21.0
 
-RUN apk add --update rclone gnupg coreutils & adduser backup -D -H & wait
+RUN apk add --update rclone gnupg coreutils
+RUN $APP_DIR/post-install.sh
 
-COPY --chmod=500 --chown=backup:backup loop.sh /loop
-COPY --chmod=500 --chown=backup:backup backup.sh /backup.sh
+COPY --chmod=500 --chown=app:app loop.sh /app/loop
+COPY --chmod=500 --chown=app:app backup.sh /app/backup.sh
 
-USER backup
-ENTRYPOINT ["/loop"]
+USER $APP_USER
+CMD ["/app/loop"]
 HEALTHCHECK --interval=30s CMD pgrep loop >/dev/null

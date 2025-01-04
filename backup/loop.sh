@@ -1,23 +1,24 @@
 #!/bin/sh
 
-RCLONE_CONFIG="${RCLONE_CONFIG:-/rclone.conf}"
+RCLONE_CONFIG="${RCLONE_CONFIG:-$CONF_DIR/rclone.conf}"
 TARGET_TIME="${TARGET_TIME:-00:00}"
+PUBLIC_KEY="${PUBLIC_KEY:-$CONF_DIR/public.key}"
 
 if ! cp "$RCLONE_CONFIG" /tmp/rclone.conf 2>/dev/null; then
-  echo "Error: Missing rclone config"
+  echo "Error: Missing rclone config in ${RCLONE_CONFIG}"
   exit 1
 fi
 
-if [ -z "${RCLONE_REMOTE}" ]; then
+if [ -z "$RCLONE_REMOTE" ]; then
   echo "Error: Missing rclone remote"
   exit 1
 fi
 
-if [ -f /public.key ]; then
+if [ -f "$PUBLIC_KEY" ]; then
   echo "Public key found. Backups will be encrypted."
   export GNUPGHOME="/tmp/.gnupg"
 else
-  echo "No public key supplied. Backups will NOT be encrypted."
+  echo "No $PUBLIC_KEY supplied. Backups will NOT be encrypted."
 fi
 
 while true; do
@@ -28,5 +29,5 @@ while true; do
     sleep "${diff_time}"
 
     echo "$(date): Running backup script."
-    sh -c /backup.sh
+    sh -c "$APP_DIR/backup.sh"
 done
