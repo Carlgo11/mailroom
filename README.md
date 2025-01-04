@@ -1,6 +1,4 @@
-<center>
-<h1>Mail Room</h1>
-</center>
+<h1 align="center">Mail Room</h1>
 
 Mail Room is a lightweight email handling system built with Node.js and Docker, designed to securely process incoming and outgoing emails. It includes strict authentication checks (SPF, DKIM, ARC), spam detection using Rspamd, and integrates with Dovecot for mailbox management. The project is modular, consisting of distinct services that manage different aspects of email processing.
 
@@ -8,18 +6,13 @@ Table of contents
 =================
 
 - [Services](#services)
-   * [Development Progress](#development-progress)
 - [Installation](#installation)
-   * [Assisted Configuration](#assisted-configuration)
-   * [Manual Configuration](#manual-configuration)
 - [Usage](#usage)
    * [Managing users and certificates](#managing-users-and-certificates)
 - [Networking](#networking)
    * [Ports and Firewalls](#ports-and-firewalls)
    * [Internal Network](#internal-network)
 - [License](#license)
-
-## Services
 
 ## Services
 
@@ -42,30 +35,7 @@ Mail Room is designed as a modular email handling system, with distinct services
 | **Rspamd**  | Provides robust spam detection and scoring.                                              | [rspamd.com](https://rspamd.com/)  | Apache-2.0   |
 | **Redis**   | Acts as a lightweight, high-performance database for configuration and state management. | [redis.io](https://redis.io/)      | RSALv2       |
 
-### Development Progress
-
-The following features are currently not implemented:
-
-#### Inbox
-- [ ] DSN messages
-
-#### Outbox
-- [ ] CC/BCC
-- [ ] DSN messages
-- [ ] Greylisting
-- [ ] Alias support
-- [ ] Status emails on message failure
-
-#### Controller
-- [ ] DKIM certificate generation
-- [ ] TLSA record generation
-- [ ] Alias creation
-
 ## Installation
-
-You can install Mail Room using one of two methods: **Assisted Configuration** or **Manual Configuration**.
-
-### Assisted Configuration
 
 Before starting, ensure you have the following prerequisites installed:
 - **cURL**: For downloading installation files.
@@ -79,52 +49,9 @@ Before starting, ensure you have the following prerequisites installed:
    curl https://raw.githubusercontent.com/Carlgo11/mailroom/master/installation/install.sh | bash
    ```
 
-2. Edit the `.env` configuration file.
+2. Edit the `mailroom.env` file.
 
-3. Start the containers:
-   ```shell
-   docker compose up -d
-   ```
-
-### Manual Configuration
-
-Follow these steps to set up Mail Room manually:
-
-1. **Create a project directory**:
-   ```shell
-   mkdir mailroom
-   cd mailroom
-   ```
-
-2. **Download the `docker-compose.yml` file**:
-   ```shell
-   curl https://raw.githubusercontent.com/Carlgo11/mailroom/master/docker-compose.yml -O docker-compose.yml
-   ```
-
-3. **Download the example configuration**:
-   ```shell
-   curl https://raw.githubusercontent.com/Carlgo11/mailroom/master/.env.example -O .env
-   ```
-
-4. **Edit the `.env` file** to configure Mail Room:
-   ```shell
-   nano .env
-   ```
-
-5. **Set up certificate directories**:
-   ```shell
-   mkdir -p certs/{clients,dkim,dovecot,inbox,outbox}
-   ```
-
-6. **Start the Docker containers**:
-   ```shell
-   docker compose up -d
-   ```
-
-7. **Install the Mail Room CLI tool**:
-   ```shell
-   npm install -g mailroom-cli
-   ```
+3. Start the services, see [Usage](#Usage).
 
 ## Usage
 
