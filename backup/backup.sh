@@ -35,7 +35,7 @@ if [ -f "$PUBLIC_KEY" ]; then
 fi
 
 echo "Uploading backup to $RCLONE_REMOTE"
-rclone copyto "${BACKUP_TMP}/${BACKUP_FILE}" "$RCLONE_REMOTE" --config "/tmp/rclone.conf" || { echo "Error: Upload failed"; exit 1; }
+rclone copy "${BACKUP_TMP}/" "$RCLONE_REMOTE" --config "/tmp/rclone.conf" || { echo "Error: Upload failed"; exit 1; }
 
 echo "Removing local backup file"
 rm -rf "${BACKUP_TMP:?}"
