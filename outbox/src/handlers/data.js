@@ -3,6 +3,9 @@ import redis from '../services/redis.js';
 import { Response } from '@carlgo11/smtp-server';
 import signMessage from '../services/dkim.js';
 import fs from 'fs/promises';
+import { promisify } from 'util';
+import { execFile } from 'child_process';
+const execFileAsync = promisify(execFile);
 
 export default async function handleData(message, session) {
   const from = session.mailFrom;
@@ -51,6 +54,8 @@ export default async function handleData(message, session) {
   }
 
   await fs.writeFile(`/tmp/${email.id}.eml`, email.full_email());
+
+  await execFileAsync(`cat /tmp/${email.id} | sendmail -t -v -f ${from}`);
 }
 
 /**
