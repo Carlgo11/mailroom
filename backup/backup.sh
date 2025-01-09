@@ -41,3 +41,7 @@ echo "Removing local backup file"
 rm -rf "${BACKUP_TMP:?}"
 
 echo "Backup completed."
+
+if [ -n "$BACKUP_MAX_AGE" ]; then
+  rclone delete "$RCLONE_REMOTE" --min-age "${BACKUP_MAX_AGE:-2w}" --drive-use-trash=false --config "/tmp/rclone.conf"
+fi
