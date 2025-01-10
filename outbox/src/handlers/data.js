@@ -50,12 +50,13 @@ export default async function handleData(message, session) {
       );
       if (dkimSignature) email.headers['dkim-signature'] = dkimSignature;
     }
-  } catch (_) {
+  } catch (e) {
+    console.error(e);
   }
 
   await fs.writeFile(`/tmp/${email.id}.eml`, email.full_email());
 
-  await execFileAsync(`cat /tmp/${email.id} | sendmail -t -v -f ${from}`);
+  await execFileAsync(`cat /tmp/${email.id}.eml | sendmail -t -v -f ${from}`);
 }
 
 /**
