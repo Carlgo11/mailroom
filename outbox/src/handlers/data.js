@@ -3,9 +3,7 @@ import redis from '../services/redis.js';
 import { Response } from '@carlgo11/smtp-server';
 import signMessage from '../services/dkim.js';
 import fs from 'fs/promises';
-import { promisify } from 'util';
-import { execFile } from 'child_process';
-const execFileAsync = promisify(execFile);
+import {exec} from 'child_process';
 
 export default async function handleData(message, session) {
   const from = session.mailFrom;
@@ -46,7 +44,7 @@ export default async function handleData(message, session) {
       ];
 
       const dkimSignature = signMessage(
-        email.headers, email.body, domain, 'dkim', dkimKey, headers,
+        email.serializeHeaders, email.body, domain, 'dkim', dkimKey, headers,
       );
       if (dkimSignature) email.headers['dkim-signature'] = dkimSignature;
     }
@@ -56,7 +54,11 @@ export default async function handleData(message, session) {
 
   await fs.writeFile(`/tmp/${email.id}.eml`, email.full_email());
 
-  await execFileAsync(`cat /tmp/${email.id}.eml | sendmail -t -v -f ${from}`);
+  exec(`cat /tmp/${email.id}.eml | sendmail -t -v -f ${from}`, (error, stdout, stderr) => {
+    if (error) {
+      throw error;
+    }
+  });
 }
 
 /**
