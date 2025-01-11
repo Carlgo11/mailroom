@@ -44,7 +44,7 @@ export default async function handleData(message, session) {
       ];
 
       const dkimSignature = signMessage(
-        email.serializeHeaders, email.body, domain, 'dkim', dkimKey, headers,
+        email.serializeHeaders().split('\r\n'), email.body, domain, 'dkim', dkimKey, headers,
       );
       if (dkimSignature) email.headers['dkim-signature'] = dkimSignature;
     }
