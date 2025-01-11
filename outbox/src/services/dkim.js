@@ -49,10 +49,6 @@ export default function signMessage(allHeaders, body, domain, selector, privateK
   .map(headerName => headersMap[headerName.toLowerCase()])
   .filter(Boolean); // Remove undefined headers
 
-  if (selectedHeaders.length !== headersToSign.length) {
-    throw new Error('Some headers listed in `headersToSign` are missing from the message.');
-  }
-
   // Canonicalize the body and selected headers
   const canonicalHeaders = canonicalizeHeaders(selectedHeaders);
   const canonicalBody = canonicalizeBody(body);
