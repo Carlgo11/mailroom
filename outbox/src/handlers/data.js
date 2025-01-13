@@ -2,7 +2,6 @@ import Email from '../models/email.js';
 import redis from '../services/redis.js';
 import { Response } from '@carlgo11/smtp-server';
 import signMessage from '../services/dkim.js';
-import fs from 'fs/promises';
 import {exec} from 'child_process';
 
 export default async function handleData(message, session) {
@@ -28,33 +27,14 @@ export default async function handleData(message, session) {
   email.date = date;
 
   try {
-    const dkimKey = await fs.readFile(`${process.env.DKIM_PATH}/${domain}.key`);
-
-    // DKIM sign message
-    if (dkimKey) {
-      const headers = [
-        'from',
-        'to',
-        'subject',
-        'date',
-        'message-id',
-        'mime-version',
-        'content-type',
-        'content-transfer-encoding',
-      ];
-
-      const dkimSignature = signMessage(
-        email.serializeHeaders().split('\r\n'), email.body, domain, 'dkim', dkimKey, headers,
-      );
-      if (dkimSignature) email.headers['dkim-signature'] = dkimSignature;
-    }
+    const dkimSignature = signMessage(email);
+    if (dkimSignature) email.addHeader('dkim-signature', dkimSignature);
   } catch (e) {
-    console.error(e);
+    // Ignore dkim signature if process throws an error
+    if (process.env.NODE_ENV !== 'production') console.error(e);
   }
 
-  await fs.writeFile(`/tmp/${email.id}.eml`, email.full_email());
-
-  exec(`cat /tmp/${email.id}.eml | sendmail -t -v -f ${from}`, (error, stdout, stderr) => {
+  exec(`sendmail -t -f ${from} << EOM ${email.full_email()}\r\nEOF`, (error, stdout, stderr) => {
     if (error) {
       throw error;
     }
