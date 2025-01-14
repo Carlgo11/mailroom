@@ -15,10 +15,12 @@ ENV INBOX_TLS_CERT_PATH="/certs/inbox/cert.pem"
 ENV REDIS_HOST="redis_mail"
 ENV REDIS_PORT="6379"
 
-RUN apk add openssl
+RUN apk add openssl; adduser app -H -D
 
 WORKDIR /usr/src/inbox
 
 COPY --from=build /app /usr/src/inbox
+
+USER app
 
 ENTRYPOINT "node src/index.js 2>&1 | tee /tmp/inbox.log"
