@@ -4,7 +4,8 @@
   "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "run": "node ./src/server.js"
+    "run": "node ./src/server.js",
+    "test": "node --test"
   },
   "dependencies": {
     "@carlgo11/smtp-server": "^0.0.9",
