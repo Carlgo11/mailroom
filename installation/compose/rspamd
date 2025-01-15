@@ -4,7 +4,6 @@
     volumes:
       - rspamd_confdir:/etc/rspamd
       - rspamd_dbdir:/var/lib/rspamd
-    env_file: .env
     environment:
       - RSPAMD_REDIS_SERVERS=rspamd-compose-redis
     depends_on:

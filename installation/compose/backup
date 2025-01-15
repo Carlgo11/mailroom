@@ -1,7 +1,6 @@
   backup:
     container_name: backup
     image: carlgo11/mailroom-backup:${VERSION:-dev}
-    env_file: mailroom.env
     tmpfs:
       - /tmp
     read_only: true

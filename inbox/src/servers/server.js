@@ -21,13 +21,13 @@ export default function startServer() {
     tlsOptions,
       extensions: ['ENHANCEDSTATUSCODES', 'PIPELINING', 'REQUIRETLS', '8BITMIME'],
       greeting: process.env.INBOX_HOST,
-      onRCPTTO: async (address, session) => await handleRcptTo(address, session),
-      onMAILFROM: async (address, session, ext) => await handleMailFrom(address, session, ext),
-      onEHLO: async (domain, session) => await handleEhlo(domain, session),
-      onDATA: async (message, session) => await handleData(message, session),
-      onConnect: async(session) => await handleConnect(session),
-      logLevel: process.env.LOG_LEVEL || 'INFO',
-      maxConnections: process.env.INBOX_MAX_CONNECTIONS || 100,
+      onRCPTTO: handleRcptTo,
+      onMAILFROM: handleMailFrom,
+      onEHLO: handleEhlo,
+      onDATA: handleData,
+      onConnect: handleConnect,
+      logLevel: process.env.LOG_LEVEL,
+      maxConnections: process.env.INBOX_MAX_CONNECTIONS,
     });
   } catch (e) {
     console.error(e);

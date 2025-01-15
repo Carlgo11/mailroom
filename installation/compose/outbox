@@ -2,12 +2,13 @@
     container_name: outbox
     image: carlgo11/mailroom-outbox:${VERSION:-dev}
     ports:
-      - "${OUTBOX_BIND:-587}:587"
+      - "${OUTBOX_IPV4_BIND:-0.0.0.0:587}:587/tcp"
+      - "${OUTBOX_IPV6_BIND:-[::]:587}:587/tcp"
     volumes:
-      - ${CERT_PATH:-./certs}/outbox:/certs/outbox:ro
-      - ${CERT_PATH:-./certs}/dkim:/certs/dkim:ro
+      - ${OUTBOX_TLS_KEY}:/etc/ssl/outbox/privkey.pem:ro
+      - ${OUTBOX_TLS_CERT}:/etc/ssl/outbox/cert.pem:ro
+      - ${OUTBOX_DKIM_PATH}:/etc/ssl/dkim:ro
       - vhosts:/var/mail/vhosts
-    env_file: mailroom.env
     depends_on:
       - redis
     read_only: true

@@ -24,11 +24,8 @@
   "private": true,
   "license": "LGPL-3.0-or-later",
   "scripts": {
-    "start": "node --env-file=../.env src/index.js",
-    "test": "node --test",
-    "lint": "eslint src --ext .js,.mjs",
-    "dev": "node src/index.js --watch-path src/",
-    "prepublishOnly": "npm test && npm run lint"
+    "start": "node src/index.js",
+    "test": "node --test"
   },
   "dependencies": {
     "mailauth": "^4.6.8",

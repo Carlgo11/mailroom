@@ -36,11 +36,10 @@ profile mailroom-inbox flags=(attach_disconnected, mediate_deleted) {
   /sys/fs/cgroup/** r,                     # cgroups (read-only)
 
   ## Capabilities and signals
-  capability dac_override,                 # Required capability for file access
+  capability net_bind_service              # Required capability to bind to port 25
   signal (receive) peer=unconfined,        # Allow signals from unconfined processes
   network inet stream,
   network inet6 dgram,
   network inet6 stream,
   network netlink raw,
-  deny network,
 }

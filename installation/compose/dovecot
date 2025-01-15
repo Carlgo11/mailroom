@@ -2,13 +2,13 @@
     container_name: dovecot
     image: dovecot/dovecot
     ports:
-      - "${DOVECOT_BIND:-993}:993/tcp"
+      - "${DOVECOT_IPV4_BIND:-0.0.0.0:993}:993/tcp"
+      - "${DOVECOT_IPV6_BIND:-[::]:993}:993/tcp"
     volumes:
       - ${CONF_PATH:-./configs}/dovecot:/etc/dovecot/conf.d:ro
-      - ${CERT_PATH:-./certs}/dovecot:/certs/dovecot:ro
-      - ${CERT_PATH:-./certs}/clients:/certs/clients:ro
+      - ${DOVECOT_TLS_KEY}:/certs/dovecot/privkey.pem:ro
+      - ${DOVECOT_TLS_CERT}:/certs/dovecot/cert.pem:ro
       - vhosts:/var/mail/vhosts
-    env_file: mailroom.env
     depends_on:
       - redis
     networks:
