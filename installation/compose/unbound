@@ -1,0 +1,8 @@
+  unbound:
+    container_name: unbound
+    image: mvance/unbound
+    restart: unless-stopped
+    pull_policy: always
+    networks:
+      postnet:
+        ipv4_address: ${POSTNET_NETWORK:-172.22.0}.8

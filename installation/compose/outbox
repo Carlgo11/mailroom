@@ -1,6 +1,8 @@
   outbox:
     container_name: outbox
     image: carlgo11/mailroom-outbox:${VERSION:-dev}
+    dns:
+      - ${POSTNET_NETWORK:-172.22.0}.8
     ports:
       - "${OUTBOX_IPV4_BIND:-0.0.0.0:587}:587/tcp"
       - "${OUTBOX_IPV6_BIND:-[::]:587}:587/tcp"
@@ -9,9 +11,9 @@
       - ${OUTBOX_TLS_CERT}:/etc/ssl/outbox/cert.pem:ro
       - ${OUTBOX_DKIM_PATH}:/etc/ssl/dkim:ro
       - vhosts:/var/mail/vhosts
+    read_only: true
     depends_on:
       - redis
-    read_only: true
     tmpfs:
       - /tmp
     networks:

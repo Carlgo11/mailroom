@@ -37,6 +37,7 @@ echo "Creating Mail Room directory..."
 mkdir -p mailroom
 cd mailroom
 curl -sSL "https://raw.githubusercontent.com/Carlgo11/mailroom/master/mailroom.env" -o mailroom.env
+ln -s mailroom.env .env
 
 run_additional_task "setup-compose.sh"
 

@@ -19,7 +19,7 @@ profile mailroom-inbox flags=(attach_disconnected, mediate_deleted) {
 
   ## Certificate and mail storage
   /etc/ssl/inbox/* r,                      # Certificates
-  /etc/ssl/certs/* r,                      # User-specific certificates
+  /etc/ssl/clients/* r,                    # User-specific certificates
   /var/mail/vhosts/** w,                   # Mail directories
 
   ## Temporary and process files

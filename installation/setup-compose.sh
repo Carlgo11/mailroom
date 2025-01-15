@@ -41,6 +41,11 @@ if [[ "$backup" =~ ^[Yy]$ ]]; then
   install 'backup'
 fi
 
+read -rp "Include service Unbound? (y/n): " unbound
+if [[ "$unbound" =~ ^[Yy]$ ]]; then
+  install 'unbound'
+fi
+
 install '_tail'
 
 echo "Docker Compose file configured."
