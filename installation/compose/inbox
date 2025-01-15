@@ -8,7 +8,7 @@
     volumes:
       - ${INBOX_TLS_KEY}:/etc/ssl/inbox/privkey.pem
       - ${INBOX_TLS_CERT}:/etc/ssl/inbox/cert.pem
-      - ${INBOX_SMIME_PATH}:/etc/ssl/clients/:ro
+      - ${USER_CERTS_PATH}:/etc/ssl/clients/:ro
       - ${INBOX_LOG}:/var/log/inbox.log
       - vhosts:/var/mail/vhosts
     cap_drop:

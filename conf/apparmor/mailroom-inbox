@@ -7,6 +7,7 @@ profile mailroom-inbox flags=(attach_disconnected, mediate_deleted) {
   /bin/busybox mrix,
   /usr/bin/openssl ix,                     # OpenSSL for certificates
   /etc/ssl/openssl.cnf r,                  # OpenSSL configuration
+  /entrypoint.sh mrix,                     # Allow execution of entrypoint
 
   ## Application files and modules
   /usr/src/inbox/** r,                     # App source files
@@ -17,8 +18,8 @@ profile mailroom-inbox flags=(attach_disconnected, mediate_deleted) {
   /etc/nsswitch.conf r,                    # NSS configuration
 
   ## Certificate and mail storage
-  /certs/inbox/** r,                       # Certificates
-  /certs/clients/users/** r,               # User-specific certificates
+  /etc/ssl/inbox/* r,                      # Certificates
+  /etc/ssl/certs/* r,                      # User-specific certificates
   /var/mail/vhosts/** w,                   # Mail directories
 
   ## Temporary and process files

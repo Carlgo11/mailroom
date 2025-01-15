@@ -3,6 +3,7 @@ COPY . /app
 WORKDIR /app
 RUN rm entrypoint.sh
 RUN npm i --omit=dev
+RUN npm run test
 
 FROM node:20-alpine
 
@@ -10,6 +11,8 @@ ENV LOG_FILE="/var/log/inbox.log"
 ENV LOG_LEVEL="INFO"
 ENV INBOX_COINTAINER_TLS_KEY="/etc/ssl/inbox/privkey.pem"
 ENV INBOX_COINTAINER_TLS_CERT="/etc/ssl/inbox/cert.pem"
+ENV MAILBOX_PATH="/var/mail/vhosts/"
+ENV CLIENT_CERT_PATH="/etc/ssl/clients/"
 ENV REDIS_HOST="redis_mail"
 ENV REDIS_PORT=6379
 ENV INBOX_MAX_CONNECTIONS=1024
