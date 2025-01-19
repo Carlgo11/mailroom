@@ -8,12 +8,11 @@ import {
   handleRcptTo,
 } from '../handlers/eventHandler.js';
 
-const pidFile = '/var/tmp/inbox.pid';
 let server;
 
 export default function startServer() {
   // Write the PID file
-  fs.writeFileSync(pidFile, process.pid.toString(), {encoding: 'utf8'});
+  fs.writeFileSync(process.env.INBOX_PID, process.pid.toString(), {encoding: 'utf8'});
 
   try {
     // Create SMTP server instance
@@ -67,9 +66,9 @@ function handleError(err) {
 }
 
 function cleanup() {
-  if (fs.existsSync(pidFile)) {
-    fs.unlinkSync(pidFile);
-    console.log(`PID file ${pidFile} removed.`);
+  if (fs.existsSync(process.env.INBOX_PID)) {
+    fs.unlinkSync(process.env.INBOX_PID);
+    console.log(`PID file ${process.env.INBOX_PID} removed.`);
   }
 }
 
