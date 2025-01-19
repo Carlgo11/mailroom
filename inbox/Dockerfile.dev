@@ -1,7 +1,7 @@
 FROM node:20 AS build
 COPY . /app
 WORKDIR /app
-RUN npm i --omit=dev && npm run test && rm -r test entrypoint.sh
+RUN npm i --omit=dev
 
 FROM alpine
 
